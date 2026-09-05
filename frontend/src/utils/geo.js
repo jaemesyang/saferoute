@@ -10,7 +10,7 @@ export function requestLocation() {
         navigator.geolocation.getCurrentPosition(
             (position) => resolve({ lat: position.coords.latitude, lng: position.coords.longitude }),
             (error) => reject(error),
-            { timeout: 10000 }
+            { timeout: 10000, maximumAge: 15000, enableHighAccuracy: true }
         )
     })
 }
@@ -42,4 +42,24 @@ export function haversineMeters(lat1, lng1, lat2, lng2) {
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
     return R * c * 1000;
+}
+
+/**
+ *
+ * @template {{ lat: number, lng: number }} T
+ * @param {{ lat: number, lng: number }} coords
+ * @param {T[]} spots
+ * @returns {{ spot: T, meters: number } | null}
+ */
+export function pickClosest(coords, spots) {
+    if (!coords || !Number.isFinite(coords.lat) || !Number.isFinite(coords.lng)) return null
+    if (!Array.isArray(spots) || spots.length === 0) return null
+
+    let best = null
+    for (const spot of spots) {
+        const meters = haversineMeters(coords.lat, coords.lng, spot.lat, spot.lng)
+        if (!Number.isFinite(meters)) continue
+        if (best === null || meters < best.meters) best = { spot, meters }
+    }
+    return best
 }
