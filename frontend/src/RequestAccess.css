@@ -1,0 +1,106 @@
+.access {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background-image:
+    linear-gradient(var(--panel) 1px, transparent 1px),
+    linear-gradient(90deg, var(--panel) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+.access-card {
+  width: 100%;
+  max-width: 400px;
+  border: 1px solid var(--line-bright);
+  background: var(--panel);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+}
+
+.access-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel-2);
+}
+
+.access-mark {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.access-mark-name {
+  font: 600 14px/1 var(--mono);
+  letter-spacing: 0.22em;
+  color: var(--text);
+}
+
+.access-mark-sub {
+  font: 400 11px/1 var(--mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+.access-body {
+  padding: 22px 20px;
+}
+
+.access-intro {
+  margin: 0 0 20px;
+  color: var(--dim);
+  font-size: 13px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-bottom: 16px;
+}
+
+.field input {
+  width: 100%;
+  padding: 9px 11px;
+  border: 1px solid var(--line-bright);
+  border-radius: 2px;
+  background: var(--bg);
+  font-family: var(--mono);
+  font-size: 14px;
+}
+
+.field input::placeholder {
+  color: var(--dimmer);
+}
+
+.field input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px rgba(74, 168, 255, 0.35);
+}
+
+.access-error {
+  margin: 0 0 16px;
+  padding: 9px 11px;
+  border-left: 2px solid var(--alert);
+  background: var(--alert-bg);
+  color: #ff9c85;
+  font-size: 13px;
+}
+
+.access-submit {
+  width: 100%;
+  padding: 11px;
+}
+
+.access-foot {
+  padding: 12px 20px;
+  border-top: 1px solid var(--line);
+  background: var(--panel-2);
+  color: var(--dimmer);
+}

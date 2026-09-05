@@ -1,0 +1,150 @@
+/* Global tokens + reset. Dispatch console: dark, dense, high contrast. */
+
+:root {
+  /* surfaces */
+  --bg: #0a0c0f;
+  --panel: #101419;
+  --panel-2: #161b22;
+  --line: #222a33;
+  --line-bright: #2f3945;
+
+  /* text */
+  --text: #e3e8ee;
+  --dim: #7c8894;
+  --dimmer: #56606b;
+
+  /* signal colors */
+  --accent: #4aa8ff;
+  --accent-bg: rgba(74, 168, 255, 0.12);
+  --ok: #35c07a;
+  --ok-bg: rgba(53, 192, 122, 0.12);
+  --warn: #f0a92e;
+  --warn-bg: rgba(240, 169, 46, 0.12);
+  --alert: #f0603c;
+  --alert-bg: rgba(240, 96, 60, 0.12);
+
+  --sans: ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;
+  --mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+  color-scheme: dark;
+  font: 15px/1.45 var(--sans);
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+}
+
+#root {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+input {
+  font: inherit;
+  color: inherit;
+}
+
+/* Shared: small uppercase label used across both screens. */
+.label {
+  font: 500 11px/1 var(--mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+/* Shared: status pill. Modifier class sets the color. */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border: 1px solid var(--line-bright);
+  border-radius: 2px;
+  font: 500 11px/1.4 var(--mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.pill.is-warn {
+  color: var(--warn);
+  border-color: rgba(240, 169, 46, 0.45);
+  background: var(--warn-bg);
+}
+
+.pill.is-ok {
+  color: var(--ok);
+  border-color: rgba(53, 192, 122, 0.4);
+  background: var(--ok-bg);
+}
+
+.pill.is-dim {
+  color: var(--dim);
+  background: var(--panel-2);
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex: none;
+}
+
+/* Shared: buttons. Square-ish, mono label, no motion beyond a color change. */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border: 1px solid var(--line-bright);
+  border-radius: 2px;
+  background: var(--panel-2);
+  color: var(--text);
+  font: 500 12px/1.4 var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: background-color 0.12s linear, border-color 0.12s linear;
+}
+
+.btn:hover:not(:disabled) {
+  background: #1e242c;
+  border-color: #3d4855;
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.btn-primary {
+  color: var(--accent);
+  border-color: rgba(74, 168, 255, 0.45);
+  background: var(--accent-bg);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: rgba(74, 168, 255, 0.2);
+  border-color: rgba(74, 168, 255, 0.7);
+}
