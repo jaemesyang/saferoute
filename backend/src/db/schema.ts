@@ -1,7 +1,7 @@
 import { geometry, index, pgTable, serial, text } from 'drizzle-orm/pg-core';
 
-export const stores = pgTable(
-    'stores',
+export const hotspots = pgTable(
+    'hotspots',
     {
         id: serial('id').primaryKey(),
         name: text('name').notNull(),
