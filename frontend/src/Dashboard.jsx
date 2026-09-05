@@ -1,18 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { fetchHotspots } from './api/hotspots.js'
+import { usePolling } from './hooks/usePolling.js'
 import HotspotMap from './HotspotMap.jsx'
 import './Dashboard.css'
 
-/**
- *
- * @param {() => void} load 
- * @param {number} intervalMs
- * @returns {void}
- */
-// TODO: implement the interval + cleanup. The dashboard fetches once on mount
-// for now (see the useEffect below) and refreshes manually from the header.
-// eslint-disable-next-line no-unused-vars
-function usePolling(load, intervalMs) { }
+const REFRESH_INTERVAL_MS = 15000
 
 function severityOf(headcount) {
   if (headcount >= 40) return 'high'
@@ -56,6 +48,8 @@ function Dashboard({ dispatcherName, onSignOut }) {
     load()
   }, [load])
 
+  usePolling(load, REFRESH_INTERVAL_MS)
+
   const sorted = useMemo(
     () => [...hotspots].sort((a, b) => b.headcount - a.headcount),
     [hotspots],
@@ -77,6 +71,14 @@ function Dashboard({ dispatcherName, onSignOut }) {
    */
   function handleClaim(id) {
     setHotspots(hotspots.map((spot) => spot.id === id ? { ...spot, claimedBy: dispatcherName } : spot))
+  }
+
+  /**   *
+   * @param {string} id
+   * @returns {void}
+   */
+  function handleResolve(id) {
+    setHotspots(hotspots.filter((spot) => spot.id !== id))
   }
 
   return (
@@ -183,15 +185,26 @@ function Dashboard({ dispatcherName, onSignOut }) {
               <span className="col-count">{spot.headcount}</span>
               <span className="col-action">
                 {spot.claimedBy ? (
-                  <span
-                    className={
-                      spot.claimedBy === dispatcherName
-                        ? 'pill is-ok'
-                        : 'pill is-dim'
-                    }
-                  >
-                    Claimed by {spot.claimedBy}
-                  </span>
+                  <>
+                    <span
+                      className={
+                        spot.claimedBy === dispatcherName
+                          ? 'pill is-ok'
+                          : 'pill is-dim'
+                      }
+                    >
+                      Claimed by {spot.claimedBy}
+                    </span>
+                    {spot.claimedBy === dispatcherName && (
+                      <button
+                        className="btn"
+                        type="button"
+                        onClick={() => handleResolve(spot.id)}
+                      >
+                        Resolve
+                      </button>
+                    )}
+                  </>
                 ) : (
                   <button
                     className="btn btn-primary"

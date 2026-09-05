@@ -1,0 +1,113 @@
+.report {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px 76px;
+}
+
+.report-inner {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.report-head {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.report-mark {
+  font: 600 13px/1 var(--mono);
+  letter-spacing: 0.22em;
+  color: var(--dim);
+}
+
+.report-lede {
+  margin: 0;
+  font-size: 26px;
+  line-height: 1.25;
+  color: var(--text);
+}
+
+.report-action {
+  width: 100%;
+  min-height: 64px;
+  padding: 18px 20px;
+  font-size: 16px;
+  letter-spacing: 0.1em;
+}
+
+.report-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  color: var(--dim);
+  font-size: 15px;
+}
+
+.report-status .dot {
+  color: var(--accent);
+  width: 8px;
+  height: 8px;
+}
+
+.report-error {
+  padding: 16px;
+  border-left: 2px solid var(--alert);
+  background: var(--alert-bg);
+}
+
+.report-error-text {
+  margin: 0 0 14px;
+  color: #ff9c85;
+  font-size: 16px;
+  line-height: 1.4;
+}
+
+.report-retry {
+  width: 100%;
+  min-height: 52px;
+  font-size: 14px;
+}
+
+.report-note {
+  margin: 0;
+  color: var(--dimmer);
+  font-size: 13px;
+}
+
+.report-dispatcher {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  padding: 10px 12px;
+  border: 0;
+  background: none;
+  color: var(--dimmer);
+  font: 500 11px/1 var(--mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.report-dispatcher:hover {
+  color: var(--dim);
+}
+
+.report-dispatcher:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+@media (min-width: 640px) {
+  .report-lede {
+    font-size: 30px;
+  }
+}

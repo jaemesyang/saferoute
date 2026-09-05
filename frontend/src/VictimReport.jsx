@@ -1,0 +1,112 @@
+import { useState } from 'react'
+import { submitReport } from './api/reports.js'
+import { requestLocation } from './utils/geo.js'
+import './VictimReport.css'
+
+const ERRORS = {
+  permission:
+    "We can't see your location. Location access is turned off for this page. Turn it on in your browser settings, then try again.",
+  unsupported:
+    "This browser can't share your location. Try opening this page in a different browser, or call for help directly.",
+  network:
+    "We couldn't send your location. Check your signal and try again."
+}
+
+/**
+ * @param {Object} props
+ * @param {(result: { assignment: import('./api/reports.js').Assignment, coords: { lat: number, lng: number }, isStub: boolean }) => void} props.onReported
+ * @param {() => void} props.onDispatcherAccess
+ */
+function VictimReport({ onReported, onDispatcherAccess }) {
+  const [phase, setPhase] = useState('idle')
+  const [error, setError] = useState('')
+
+  const isBusy = phase === 'locating' || phase === 'sending'
+
+  async function handleShare() {
+    setError('')
+
+    if (!('geolocation' in navigator)) {
+      setError(ERRORS.unsupported)
+      setPhase('idle')
+      return
+    }
+
+    let coords
+    try {
+      setPhase('locating')
+      coords = await requestLocation()
+    } catch (err) {
+      setError(err?.code === 1 ? ERRORS.permission : err?.message || ERRORS.permission)
+      setPhase('idle')
+      return
+    }
+
+    try {
+      setPhase('sending')
+      const result = await submitReport(coords.lat, coords.lng)
+      onReported({ assignment: result.assignment, coords, isStub: result.isStub })
+    } catch {
+      setError(ERRORS.network)
+      setPhase('idle')
+    }
+  }
+
+  return (
+    <main className="report">
+      <div className="report-inner">
+        <header className="report-head">
+          <span className="report-mark">SAFEROUTE</span>
+          <p className="report-lede">
+            Share where you are and we'll send you to the nearest safe place.
+          </p>
+        </header>
+
+        <button
+          className="btn btn-primary report-action"
+          type="button"
+          onClick={handleShare}
+          disabled={isBusy}
+        >
+          {isBusy ? 'Working…' : 'Share my location'}
+        </button>
+
+        {isBusy && (
+          <p className="report-status" role="status">
+            <span className="dot" />
+            {phase === 'locating'
+              ? 'Finding where you are…'
+              : 'Looking for a safe place near you…'}
+          </p>
+        )}
+
+        {error && !isBusy && (
+          <div className="report-error" role="alert">
+            <p className="report-error-text">{error}</p>
+            <button
+              className="btn report-retry"
+              type="button"
+              onClick={handleShare}
+            >
+              Try again
+            </button>
+          </div>
+        )}
+
+        <p className="report-note">
+          Your location is only used to find you a safe place to go.
+        </p>
+      </div>
+
+      <button
+        className="report-dispatcher"
+        type="button"
+        onClick={onDispatcherAccess}
+      >
+        Dispatcher access
+      </button>
+    </main>
+  )
+}
+
+export default VictimReport

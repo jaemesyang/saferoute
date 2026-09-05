@@ -219,13 +219,16 @@
   .col-sev {
     grid-area: sev;
   }
+
   .col-name {
     grid-area: name;
     white-space: normal;
   }
+
   .col-count {
     grid-area: count;
   }
+
   .col-action {
     grid-area: action;
     justify-content: flex-start;
@@ -264,10 +267,7 @@
 
 /* ---- map ---- */
 
-/* Leaflet measures its container on init, so the canvas needs a height that
-   resolves on its own. A percentage would compute to 0 against a flex-grown
-   parent, so the wrapper is a flex box and the canvas fills it with an explicit
-   floor. */
+
 .dash-map {
   display: flex;
   flex: 1;
@@ -280,14 +280,10 @@
   background: var(--bg);
 }
 
-/* OSM ships light tiles; invert them into the console's dark palette. Only the
-   tile pane is filtered, so marker colors stay true. */
 .map-canvas .leaflet-tile-pane {
-  filter: invert(1) hue-rotate(180deg) brightness(0.85) contrast(0.9)
-    saturate(0.6);
+  filter: invert(1) hue-rotate(180deg) brightness(0.85) contrast(0.9) saturate(0.6);
 }
 
-/* Dark treatment for Leaflet's own chrome. */
 .map-canvas .leaflet-control-zoom a {
   border: 1px solid var(--line-bright);
   background: var(--panel-2);

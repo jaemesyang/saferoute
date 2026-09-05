@@ -1,0 +1,136 @@
+/* Civilian status screen: read at a walking pace, on a phone, under stress. */
+
+.status {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px 48px;
+}
+
+.status-inner {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.status-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.status-mark {
+  font: 600 13px/1 var(--mono);
+  letter-spacing: 0.22em;
+  color: var(--dim);
+}
+
+.status-place {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.status-name {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--text);
+}
+
+.status-headcount {
+  margin: 0;
+  color: var(--dim);
+  font-size: 15px;
+}
+
+.status-headcount strong {
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The gate: distance, then either the check-in button or what's left to walk. */
+.status-gate {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+}
+
+.status-distance {
+  font: 600 44px/1 var(--mono);
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.status-checkin {
+  width: 100%;
+  min-height: 64px;
+  margin-top: 4px;
+  padding: 18px 20px;
+  font-size: 16px;
+  letter-spacing: 0.1em;
+}
+
+.status-hint {
+  margin: 0;
+  color: var(--dim);
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.status-stale {
+  margin: 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  color: var(--dimmer);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.status-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 20px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+}
+
+.status-panel.is-done {
+  border-left: 2px solid var(--ok);
+}
+
+.status-panel-text {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.4;
+  color: var(--text);
+}
+
+.status-note {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  color: var(--dimmer);
+  font-size: 13px;
+}
+
+@media (min-width: 640px) {
+  .status-name {
+    font-size: 30px;
+  }
+
+  .status-distance {
+    font-size: 52px;
+  }
+}
