@@ -65,6 +65,6 @@ export async function createReport(input: CreateReportInput): Promise<ReportAssi
     name: closest.name,
     lat: closest.lat,
     lng: closest.lng,
-    distanceToUser: closest.distanceMeters,
+    distanceMeters: closest.distanceMeters,
   };
 }

@@ -16,5 +16,5 @@ export type ReportAssignment = {
   name: string
   lat: number
   lng: number
-  distanceToUser: number
+  distanceMeters: number
 }
