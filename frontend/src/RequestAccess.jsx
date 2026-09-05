@@ -2,10 +2,6 @@ import { useState } from 'react'
 import './RequestAccess.css'
 
 /**
- * Screen 1 - access gate. There is no real auth: any non-empty name and code
- * are accepted, and the trimmed name is passed up so the dashboard can tag
- * claims with it.
- *
  * @param {Object} props
  * @param {(name: string) => void} props.onApprove
  */

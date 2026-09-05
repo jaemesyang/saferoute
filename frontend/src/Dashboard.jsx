@@ -5,8 +5,8 @@ import './Dashboard.css'
 
 /**
  *
- * @param {() => void} load - loader to run on each tick
- * @param {number} intervalMs - delay between ticks
+ * @param {() => void} load 
+ * @param {number} intervalMs
  * @returns {void}
  */
 // TODO: implement the interval + cleanup. The dashboard fetches once on mount
@@ -14,7 +14,6 @@ import './Dashboard.css'
 // eslint-disable-next-line no-unused-vars
 function usePolling(load, intervalMs) { }
 
-/** Headcount thresholds that drive the row's severity bar. */
 function severityOf(headcount) {
   if (headcount >= 40) return 'high'
   if (headcount >= 20) return 'med'
