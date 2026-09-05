@@ -1,10 +1,11 @@
 import {db} from "../../db/index.js";
-import {hotspots} from "../../db/schema.js";
-import {GetClosestInput} from "./rescueRequest.schema.js";
+import {hotspots, rescueRequests} from "../../db/schema.js";
+import {CreateReportInput} from "./rescueRequest.schema.js";
 import {sql} from 'drizzle-orm';
-import {ClosestHotspot, Point} from './rescueRequest.types.js';
+import {eq} from 'drizzle-orm';
+import {ClosestHotspot, Point, ReportAssignment} from './rescueRequest.types.js';
 
-export async function getClosest(input: GetClosestInput): Promise<ClosestHotspot | null> {
+async function getClosest(input: CreateReportInput): Promise<ClosestHotspot | null> {
   const point: Point = {
     x: input.lng,
     y: input.lat
@@ -32,5 +33,38 @@ export async function getClosest(input: GetClosestInput): Promise<ClosestHotspot
     lat: closest.location.y,
     lng: closest.location.x,
     distanceMeters: closest.distanceMeters,
+  };
+}
+
+export async function createReport(input: CreateReportInput): Promise<ReportAssignment | null> {
+  const closest = await getClosest(input);
+
+  if (!closest) {
+    return null;
+  }
+
+  const report = await db.transaction(async (tx) => {
+    await tx
+      .update(hotspots)
+      .set({headcount: sql`${hotspots.headcount} + 1`})
+      .where(eq(hotspots.id, closest.id));
+
+    const [created] = await tx
+      .insert(rescueRequests)
+      .values({
+        assignedHotspotId: closest.id,
+        status: 'pending',
+      })
+      .returning({id: rescueRequests.id});
+
+    return created;
+  });
+
+  return {
+    id: String(report.id),
+    name: closest.name,
+    lat: closest.lat,
+    lng: closest.lng,
+    distanceToUser: closest.distanceMeters,
   };
 }

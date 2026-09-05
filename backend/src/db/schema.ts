@@ -17,7 +17,7 @@ export const rescueRequests = pgTable(
   'rescue_requests',
   {
     id: serial('id').primaryKey(),
-    assignedHotspotId: integer('assigned_hotspot_id').references(() => hotspots.location),
+    assignedHotspotId: integer('assigned_hotspot_id').references(() => hotspots.id),
     people: integer('people').notNull().default(1),
     status: text('status').notNull(),
   }
