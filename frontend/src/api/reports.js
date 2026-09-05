@@ -1,10 +1,13 @@
+import { PREDETERMINED_HOTSPOTS } from './hotspots.js'
+import { pickClosest } from '../utils/geo.js'
+
 /**
  * @typedef {Object} Assignment
  * @property {string} id
  * @property {string} name
  * @property {number} lat
  * @property {number} lng
- * @property {number} distanceToUser
+ * @property {number} distanceToUser 
  */
 
 /**
@@ -17,28 +20,43 @@
  *
  * @param {number} lat
  * @param {number} lng
+ * @param {string} [apiUrl] 
  * @returns {Promise<ReportResult>}
  */
-export async function submitReport(lat, lng) {
-  const baseUrl = import.meta.env.VITE_API_URL;
+export async function submitReport(lat, lng, apiUrl) {
+  const coords = { lat, lng };
+  const baseUrl = apiUrl ?? import.meta.env?.VITE_API_URL;
 
   if (!baseUrl) {
-    return { assignment: await getStubAssignment(), isStub: true };
+    return { assignment: await getStubAssignment(coords), isStub: true };
   }
 
   try {
-    // TODO: confirm endpoint path with backend
-    const response = await fetch(`${baseUrl}/api/reports`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ lat, lng })
-    });
+    const query = new URLSearchParams({ lat: String(lat), lng: String(lng) });
+    const response = await fetch(`${baseUrl}/api/closest?${query}`);
     if (!response.ok) {
-      return { assignment: await getStubAssignment(), isStub: true };
+      return { assignment: await getStubAssignment(coords), isStub: true };
     }
-    return { assignment: await response.json(), isStub: false };
+
+    const closest = await response.json();
+    if (!closest || !Number.isFinite(closest.lat) || !Number.isFinite(closest.lng)) {
+      return { assignment: await getStubAssignment(coords), isStub: true };
+    }
+
+    return {
+      assignment: {
+        id: String(closest.id),
+        name: closest.name,
+        lat: closest.lat,
+        lng: closest.lng,
+        distanceToUser: Number.isFinite(closest.distanceMeters)
+          ? closest.distanceMeters
+          : pickClosest(coords, [closest])?.meters ?? 0
+      },
+      isStub: false
+    };
   } catch {
-    return { assignment: await getStubAssignment(), isStub: true };
+    return { assignment: await getStubAssignment(coords), isStub: true };
   }
 }
 
@@ -57,16 +75,22 @@ export async function submitReport(lat, lng) {
 export async function checkIn(assignmentId) { }
 
 /**
+ * @param {{ lat: number, lng: number }} coords
  * @returns {Promise<Assignment>}
  */
-export async function getStubAssignment() {
+export async function getStubAssignment(coords) {
   await new Promise(resolve => setTimeout(resolve, 500));
 
+  const closest = pickClosest(coords, PREDETERMINED_HOTSPOTS);
+  if (!closest) {
+    throw new Error('Cannot pick a safe place without a position')
+  }
+
   return {
-    id: 'stub-assignment-0',
-    name: 'Creighton University',
-    lat: 41.2659,
-    lng: -95.9451,
-    distanceToUser: 1.4
+    id: closest.spot.id,
+    name: closest.spot.name,
+    lat: closest.spot.lat,
+    lng: closest.spot.lng,
+    distanceToUser: closest.meters
   };
 }
