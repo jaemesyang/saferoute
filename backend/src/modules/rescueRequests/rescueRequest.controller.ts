@@ -8,4 +8,5 @@ export async function createReport(req: Request, res: Response) {
 
 export async function arrived(req: Request, res: Response) {
   await rescueRequestService.arrived(req.body);
+  res.status(204).end()
 }
