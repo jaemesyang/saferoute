@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react'
-import { fetchHotspots } from './api/hotspots.js'
+import { claimHotspot, fetchHotspots, resolveHotspot } from './api/hotspots.js'
 import { usePolling } from './hooks/usePolling.js'
 import { mergeHotspots } from './utils/hotspotState.js'
 import HotspotMap from './HotspotMap.jsx'
@@ -33,6 +33,8 @@ function Dashboard({ dispatcherName, onSignOut }) {
   const [hasLoaded, setHasLoaded] = useState(false)
   const [lastSync, setLastSync] = useState(null)
   const [view, setView] = useState('list')
+  const [tokens, setTokens] = useState({})
+  const [notice, setNotice] = useState(null)
 
   const load = useCallback(async () => {
     setIsFetching(true)
@@ -70,20 +72,67 @@ function Dashboard({ dispatcherName, onSignOut }) {
   )
 
   /**
-   *
    * @param {string} id
-   * @returns {void}
+   * @returns {Promise<void>}
    */
-  function handleClaim(id) {
+  async function handleClaim(id) {
     setClaims((prev) => ({ ...prev, [id]: dispatcherName }))
+    setNotice(null)
+
+    const result = await claimHotspot(id, dispatcherName)
+
+    if (result.status === 'claimed') {
+      if (result.resolveToken) {
+        setTokens((prev) => ({ ...prev, [id]: result.resolveToken }))
+      }
+      await load()
+      return
+    }
+
+    setClaims((prev) => {
+      const next = { ...prev }
+      delete next[id]
+      return next
+    })
+
+    if (result.status === 'conflict') {
+      setNotice(`Already claimed by ${result.claimedBy ?? 'another dispatcher'}.`)
+    } else if (result.status === 'notFound') {
+      setNotice('That hotspot is no longer active.')
+    } else {
+      setNotice('Could not reach dispatch. Claim not saved — try again.')
+    }
+
+    await load()
   }
 
-  /**   *
+  /**
    * @param {string} id
-   * @returns {void}
+   * @returns {Promise<void>}
    */
-  function handleResolve(id) {
+  async function handleResolve(id) {
+    setNotice(null)
+
+    let token = tokens[id]
+    if (!token) {
+      const reclaim = await claimHotspot(id, dispatcherName)
+      if (reclaim.status !== 'claimed' || !reclaim.resolveToken) {
+        setNotice('Could not confirm you own this hotspot — refresh and try again.')
+        return
+      }
+      token = reclaim.resolveToken
+      setTokens((prev) => ({ ...prev, [id]: token }))
+    }
+
+    const result = await resolveHotspot(id, token)
+
+    if (result.status !== 'resolved' && result.status !== 'notFound') {
+      setNotice('Could not reach dispatch. Hotspot not resolved — try again.')
+      return
+    }
+
     setResolvedIds((prev) => (prev.includes(id) ? prev : [...prev, id]))
+    await load()
   }
 
   return (
@@ -132,6 +181,16 @@ function Dashboard({ dispatcherName, onSignOut }) {
           </button>
         </div>
       </header>
+
+      {notice && (
+        <div className="dash-banner" role="alert">
+          <span className="pill is-warn">
+            <span className="dot" />
+            Claim
+          </span>
+          <span>{notice}</span>
+        </div>
+      )}
 
       {isStub && hasLoaded && (
         <div className="dash-banner" role="status">

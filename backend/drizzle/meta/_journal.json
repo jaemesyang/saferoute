@@ -40,8 +40,15 @@
     {
       "idx": 5,
       "version": "7",
-      "when": 1788663324619,
-      "tag": "0005_amazing_the_call",
+      "when": 1788663127161,
+      "tag": "0005_add_hotspot_claim_fields",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1788665306499,
+      "tag": "0006_last_old_lace",
       "breakpoints": true
     }
   ]
