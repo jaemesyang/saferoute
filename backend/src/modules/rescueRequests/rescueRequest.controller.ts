@@ -12,6 +12,6 @@ export async function arrived(req: Request, res: Response) {
 }
 
 export async function pickup(req: Request, res: Response) {
-  await rescueRequestService.pickup(req.body);
-  res.status(204).end();
+  const stats = await rescueRequestService.pickup(req.body);
+  res.json(stats);
 }

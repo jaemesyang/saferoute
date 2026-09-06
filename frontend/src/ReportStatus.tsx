@@ -3,6 +3,7 @@ import { fetchHotspots } from './api/hotspots'
 import { checkIn, type Assignment } from './api/reports'
 import { usePolling } from './hooks/usePolling'
 import { haversineMeters, requestLocation, type Coords } from './utils/geo'
+import QRCodeGenerator from './QRCodeGenerator'
 import './ReportStatus.css'
 
 const ARRIVAL_RADIUS_M = 50
@@ -90,6 +91,7 @@ function ReportStatus({ assignment, coords }: ReportStatusProps) {
   }
 
   const hasArrived = distance !== null && distance.meters < ARRIVAL_RADIUS_M
+  const pickupCode = new URL('/?resolve=' + assignment.id + '&token=' + assignment.qrToken, window.location.origin).toString()
 
   return (
     <main className="status">
@@ -106,6 +108,10 @@ function ReportStatus({ assignment, coords }: ReportStatusProps) {
               <strong>{counts.assigned}</strong> assigned · <strong>{counts.arrived}</strong> arrived
             </p>
           )}
+        </section>
+
+        <section aria-label="Pickup QR code">
+          <QRCodeGenerator value={pickupCode} />
         </section>
 
         {checkInPhase === 'done' ? (

@@ -7,6 +7,7 @@ export interface Assignment {
   lat: number
   lng: number
   distanceToUser: number
+  qrToken: string
 }
 
 export interface ReportResult {
@@ -31,7 +32,8 @@ export async function submitReport(lat: number, lng: number): Promise<ReportResu
       name: closest.name,
       lat: closest.lat,
       lng: closest.lng,
-      distanceToUser: Number(closest.distanceMeters)
+      distanceToUser: Number(closest.distanceMeters),
+      qrToken: closest.qrToken
     }
   }
 }
