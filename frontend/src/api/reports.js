@@ -25,7 +25,9 @@ import { pickClosest } from '../utils/geo.js'
  */
 export async function submitReport(lat, lng, apiUrl) {
   const coords = { lat, lng };
-  const baseUrl = apiUrl ?? import.meta.env?.VITE_API_URL;
+  const baseUrl = import.meta.env?.VITE_API_URL;
+
+  if (!baseUrl) return { confirmed: false, isStub: true };
 
   if (!baseUrl) {
     return { assignment: await getStubAssignment(coords), isStub: true };
@@ -75,7 +77,25 @@ export async function submitReport(lat, lng, apiUrl) {
  */
 // TODO: implement — see JSDoc above.
 // eslint-disable-next-line no-unused-vars
-export async function checkIn(assignmentId) { }
+export async function checkIn(assignmentId) {
+  const baseUrl = import.meta.env?.VITE_API_URL;
+  if (!baseUrl) {
+    return {confirmed: false, isStub: true};
+  }
+  try {
+    const response = await fetch(`${baseUrl}/api/reports/arrived`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({id: assignmentId})
+    });
+    if (!response.ok) {
+      return {confirmed: false, isStub: true};
+    }
+    return {confirmed: true, isStub: false}
+  } catch {
+    return {confirmed: false, isStub: true};
+  }
+}
 
 /**
  * @param {{ lat: number, lng: number }} coords
