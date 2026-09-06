@@ -6,5 +6,5 @@ interface QRCodeGeneratorProps {
 }
 
 export default function QRCodeGenerator({ value, size = 220 }: QRCodeGeneratorProps) {
-  return <QRCodeSVG value={value} size={size} includeMargin />
+  return <QRCodeSVG value={value} size={size} marginSize={3} />
 }

@@ -91,8 +91,9 @@ function ReportStatus({ assignment, coords }: ReportStatusProps) {
   }
 
   const hasArrived = distance !== null && distance.meters < ARRIVAL_RADIUS_M
-  const pickupCode = new URL('/?resolve=' + assignment.id + '&token=' + assignment.qrToken, window.location.origin).toString()
-
+  const payload = JSON.stringify({
+    token: assignment.qrToken
+  })
   return (
     <main className="status">
       <div className="status-inner">
@@ -110,9 +111,15 @@ function ReportStatus({ assignment, coords }: ReportStatusProps) {
           )}
         </section>
 
-        <section aria-label="Pickup QR code">
-          <QRCodeGenerator value={pickupCode} />
-        </section>
+        {checkInPhase === 'done' && (
+          <section className="status-qr" aria-label="Pickup QR code">
+            <span className="label">Pickup code</span>
+            <div className="status-qr-code">
+              <QRCodeGenerator value={payload} />
+            </div>
+            <p className="status-qr-hint">Show this code to a dispatcher.</p>
+          </section>
+        )}
 
         {checkInPhase === 'done' ? (
           <section className="status-panel is-done" role="status">
