@@ -94,13 +94,9 @@ function VictimReport({ onReported, onDispatcherAccess }: VictimReportProps) {
                 type="button"
                 onClick={() => setMobility('cannotWalk')}
               >
-                No — I'm injured
+                No, I'm injured
               </button>
             </div>
-
-            <p className="report-note">
-              This only changes what we ask you to do next.
-            </p>
           </>
         )}
 
