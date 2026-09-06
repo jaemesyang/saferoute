@@ -66,7 +66,7 @@ function ReportStatus({ assignment, coords, isStub }) {
 
     try {
       const result = await fetchHotspots()
-      const match = result.hotspots.find((spot) => spot.id === assignment.id)
+      const match = result.hotspots.find((spot) => spot.id === assignment.hotspotId)
       if (match) {
         hasSeenAssignment.current = true
         setCounts({ assigned: match.assigned, arrived: match.arrived })

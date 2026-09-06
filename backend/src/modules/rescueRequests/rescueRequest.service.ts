@@ -63,6 +63,7 @@ export async function createReport(input: CreateReportInput): Promise<ReportAssi
 
   return {
     id: String(report.id),
+    hotspotId: closest.id,
     name: closest.name,
     lat: closest.lat,
     lng: closest.lng,
@@ -88,6 +89,13 @@ export async function arrived(input: ArrivedInput) {
         assignedHotspotId: rescueRequests.assignedHotspotId
       })
     if (!request || request.assignedHotspotId == null) {
+      const [existing] = await tx
+        .select({status: rescueRequests.status})
+        .from(rescueRequests)
+        .where(eq(rescueRequests.id, input.id))
+        .limit(1);
+
+      if (existing?.status === 'arrived') return;
       throw new Error('Request is not assigned to a hotspot');
     }
     await tx

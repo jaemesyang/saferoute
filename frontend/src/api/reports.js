@@ -4,6 +4,7 @@ import { pickClosest } from '../utils/geo.js'
 /**
  * @typedef {Object} Assignment
  * @property {string} id
+ * @property {string} hotspotId
  * @property {string} name
  * @property {number} lat
  * @property {number} lng
@@ -51,6 +52,7 @@ export async function submitReport(lat, lng, apiUrl) {
     return {
       assignment: {
         id: String(closest.id),
+        hotspotId: String(closest.hotspotId),
         name: closest.name,
         lat: closest.lat,
         lng: closest.lng,
@@ -111,6 +113,7 @@ export async function getStubAssignment(coords) {
 
   return {
     id: closest.spot.id,
+    hotspotId: closest.spot.id,
     name: closest.spot.name,
     lat: closest.spot.lat,
     lng: closest.spot.lng,

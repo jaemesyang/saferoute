@@ -42,7 +42,7 @@ test('submitReport posts to the reports endpoint and normalises its shape', asyn
     return {
       ok: true,
       json: async () => ({
-        id: 7, name: 'Live Hotspot', lat: 41.1, lng: -96.1, distanceMeters: 812.5
+        id: 7, hotspotId: 3, name: 'Live Hotspot', lat: 41.1, lng: -96.1, distanceMeters: 812.5
       })
     }
   }
@@ -50,6 +50,7 @@ test('submitReport posts to the reports endpoint and normalises its shape', asyn
     const r = await submitReport(41.2340, -95.9570, 'http://api.test')
     assert.equal(r.isStub, false)
     assert.equal(r.assignment.name, 'Live Hotspot')
+    assert.equal(r.assignment.hotspotId, '3')
     assert.equal(r.assignment.distanceToUser, 812.5)
     assert.equal(calls[0].url, 'http://api.test/api/reports')
     assert.equal(calls[0].options.method, 'POST')
