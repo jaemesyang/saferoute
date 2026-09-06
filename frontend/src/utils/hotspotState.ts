@@ -1,9 +1,7 @@
 import type { Hotspot } from '../api/hotspots'
 
 export interface LocalHotspotState {
-  // hotspot id -> dispatcher who claimed it
   claims: Record<number, string>
-  // hotspots this dispatcher has already cleared
   resolvedIds: number[]
 }
 

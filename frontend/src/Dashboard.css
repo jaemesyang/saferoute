@@ -8,8 +8,6 @@
   border-inline: 1px solid var(--line);
 }
 
-/* ---- header ---- */
-
 .dash-head {
   display: flex;
   align-items: center;
@@ -59,8 +57,6 @@
   color: var(--dimmer);
 }
 
-/* ---- stub banner ---- */
-
 .dash-banner {
   display: flex;
   align-items: center;
@@ -71,8 +67,6 @@
   color: #f3c777;
   font-size: 13px;
 }
-
-/* ---- stats ---- */
 
 .dash-stats {
   display: grid;
@@ -106,8 +100,6 @@
 .stat-value.is-ok {
   color: var(--ok);
 }
-
-/* ---- list ---- */
 
 .dash-list {
   flex: 1;
@@ -220,8 +212,6 @@
   }
 }
 
-/* ---- view toggle ---- */
-
 .view-toggle {
   display: flex;
 }
@@ -245,8 +235,6 @@
   background: var(--accent-bg);
   z-index: 1;
 }
-
-/* ---- map ---- */
 
 
 .dash-map {
