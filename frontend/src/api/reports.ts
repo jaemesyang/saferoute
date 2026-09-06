@@ -47,7 +47,12 @@ export async function checkIn(assignmentId: number): Promise<void> {
 }
 
 export async function fetchReportStatus(token: string): Promise<'assigned' | 'arrived' | 'pickedup'> {
-  const response = await apiFetch(`/api/reports/status/${encodeURIComponent(token)}`, { cache: 'no-store' })
+  const response = await apiFetch('/api/reports/status', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token }),
+    cache: 'no-store'
+  })
   const result = await response.json()
   if (!['assigned', 'arrived', 'pickedup'].includes(result?.status)) {
     throw new Error('Invalid response')

@@ -105,14 +105,14 @@ export async function arrived(input: ArrivedInput) {
   })
 }
 
-export async function getStatus(token: string) {
+export async function getStatus(input: PickupInput) {
   const [request] = await db
     .select({status: rescueRequests.status})
     .from(rescueRequests)
-    .where(eq(rescueRequests.qrToken, token))
+    .where(eq(rescueRequests.qrToken, input.token))
     .limit(1);
 
-  return request ?? null;
+  return request;
 }
 
 
