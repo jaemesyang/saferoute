@@ -24,10 +24,9 @@ function formatAge(from: Date, now: Date | null): string {
 interface ReportStatusProps {
   assignment: Assignment
   coords: Coords
-  isStub: boolean
 }
 
-function ReportStatus({ assignment, coords, isStub }: ReportStatusProps) {
+function ReportStatus({ assignment, coords }: ReportStatusProps) {
   const [distance, setDistance] = useState<{ meters: number, at: Date } | null>(() => {
     const meters = haversineMeters(coords.lat, coords.lng, assignment.lat, assignment.lng)
     return Number.isFinite(meters) ? { meters, at: new Date() } : null
@@ -37,6 +36,7 @@ function ReportStatus({ assignment, coords, isStub }: ReportStatusProps) {
   const [isResolved, setIsResolved] = useState(false)
   const [lastPoll, setLastPoll] = useState<Date | null>(null)
   const [checkInPhase, setCheckInPhase] = useState<'idle' | 'sending' | 'done'>('idle')
+  const [checkInError, setCheckInError] = useState(false)
 
   const hasSeenAssignment = useRef(false)
 
@@ -76,12 +76,15 @@ function ReportStatus({ assignment, coords, isStub }: ReportStatusProps) {
   usePolling(refresh, isResolved ? 0 : POLL_INTERVAL_MS)
 
   async function handleCheckIn() {
+    setCheckInError(false)
     setCheckInPhase('sending')
-    try {
-      await checkIn(assignment.id)
-      await refresh()
-    } catch {
+    const result = await checkIn(assignment.id)
+    if (!result.confirmed) {
+      setCheckInError(true)
+      setCheckInPhase('idle')
+      return
     }
+    await refresh()
     setCheckInPhase('done')
   }
 
@@ -155,17 +158,12 @@ function ReportStatus({ assignment, coords, isStub }: ReportStatusProps) {
                 Can't reach GPS right now — this is your position from {formatAge(distance.at, lastPoll)}.
               </p>
             )}
+            {checkInError && (
+              <p className="status-stale" role="alert">
+                Couldn't confirm check-in. Check your connection and try again.
+              </p>
+            )}
           </section>
-        )}
-
-        {isStub && (
-          <p className="status-note">
-            <span className="pill is-warn">
-              <span className="dot" />
-              Demo data
-            </span>
-            Assignment and arrival data aren't live.
-          </p>
         )}
       </div>
     </main>

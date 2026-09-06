@@ -59,8 +59,6 @@
   color: var(--dimmer);
 }
 
-/* ---- stub banner ---- */
-
 .dash-banner {
   display: flex;
   align-items: center;

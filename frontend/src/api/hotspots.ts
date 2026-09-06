@@ -12,36 +12,18 @@ export interface Hotspot {
 
 export interface HotspotsResult {
   hotspots: Hotspot[]
-  isStub: boolean
 }
-
-export const PREDETERMINED_HOTSPOTS: { id: number, name: string, lat: number, lng: number }[] = [
-  { name: 'Lincoln High School', lat: 40.8066, lng: -96.688649 },
-  { name: 'Miller Middle School', lat: 41.2698, lng: -95.9745 },
-  { name: 'Kennedy High School', lat: 41.2958, lng: -96.0313 },
-  { name: 'North High Magnet School', lat: 41.2924, lng: -95.9406 },
-  { name: 'Omaha South Magnet High School', lat: 41.2133, lng: -95.9438 },
-  { name: 'Creighton University', lat: 41.2659, lng: -95.9451 },
-  { name: 'Metropolitan Community College Fort Omaha Campus', lat: 41.2812, lng: -95.9284 },
-  { name: 'Baxter Arena', lat: 41.2336, lng: -95.9569 }
-].map((loc, i) => ({ ...loc, id: -(i + 1) }))
 
 export async function fetchHotspots(): Promise<HotspotsResult> {
   const url = apiUrl('/api/hotspots');
+  if (!url) throw new Error('API is not configured')
 
-  if (!url) {
-    return { hotspots: await getStubHotspots(), isStub: true };
-  }
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`Hotspots request failed (${response.status})`)
 
-  try {
-    const response = await fetch(url);
-    if (!response.ok) {
-      return { hotspots: await getStubHotspots(), isStub: true };
-    }
-    return { hotspots: await response.json(), isStub: false };
-  } catch {
-    return { hotspots: await getStubHotspots(), isStub: true };
-  }
+  const hotspots = await response.json()
+  if (!Array.isArray(hotspots)) throw new Error('Invalid hotspots response')
+  return { hotspots }
 }
 
 export interface ClaimResult {
@@ -89,43 +71,4 @@ export async function resolveHotspot(id: number, token: string): Promise<boolean
   } catch {
     return false;
   }
-}
-
-const STUB_CLAIMS = new Map<number, string>(
-  PREDETERMINED_HOTSPOTS.filter((_, i) => i % 4 === 0).map(loc => [loc.id, 'dispatchera'])
-);
-
-let stubCounts: Map<number, { assigned: number, arrived: number }> | null = null;
-
-function driftStubCounts(): Map<number, { assigned: number, arrived: number }> {
-  if (!stubCounts) {
-    stubCounts = new Map(
-      PREDETERMINED_HOTSPOTS.map(loc => {
-        const assigned = Math.floor(Math.random() * 60) + 1
-        return [loc.id, { assigned, arrived: Math.floor(Math.random() * (assigned + 1)) }]
-      })
-    );
-    return stubCounts;
-  }
-
-  for (const [id, counts] of stubCounts) {
-    const assigned = Math.max(1, counts.assigned + Math.floor(Math.random() * 7) - 3)
-    stubCounts.set(id, {
-      assigned,
-      arrived: Math.min(assigned, Math.max(0, counts.arrived + Math.floor(Math.random() * 5) - 2)),
-    })
-  }
-  return stubCounts;
-}
-
-export async function getStubHotspots(): Promise<Hotspot[]> {
-  await new Promise(resolve => setTimeout(resolve, 500));
-
-  const counts = driftStubCounts();
-
-  return PREDETERMINED_HOTSPOTS.map(loc => ({
-    ...loc,
-    ...(counts.get(loc.id) ?? { assigned: 1, arrived: 0 }),
-    claimedBy: STUB_CLAIMS.get(loc.id) ?? null
-  }))
 }

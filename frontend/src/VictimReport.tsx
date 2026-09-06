@@ -15,7 +15,6 @@ const ERRORS = {
 export interface ReportedResult {
   assignment: Assignment
   coords: Coords
-  isStub: boolean
 }
 
 interface VictimReportProps {
@@ -52,7 +51,7 @@ function VictimReport({ onReported, onDispatcherAccess }: VictimReportProps) {
     try {
       setPhase('sending')
       const result = await submitReport(coords.lat, coords.lng)
-      onReported({ assignment: result.assignment, coords, isStub: result.isStub })
+      onReported({ assignment: result.assignment, coords })
     } catch {
       setError(ERRORS.network)
       setPhase('idle')

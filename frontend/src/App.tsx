@@ -30,7 +30,6 @@ function App() {
         <ReportStatus
           assignment={report.assignment}
           coords={report.coords}
-          isStub={report.isStub}
         />
       )
     }

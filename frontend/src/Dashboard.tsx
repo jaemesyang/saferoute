@@ -27,7 +27,6 @@ function Dashboard({ dispatcherName, onSignOut }: DashboardProps) {
   const [serverHotspots, setServerHotspots] = useState<Hotspot[]>([])
   const [claims, setClaims] = useState<Record<number, string>>({})
   const [resolvedIds, setResolvedIds] = useState<number[]>([])
-  const [isStub, setIsStub] = useState(false)
   const [isFetching, setIsFetching] = useState(true)
   const [hasLoaded, setHasLoaded] = useState(false)
   const [lastSync, setLastSync] = useState<Date | null>(null)
@@ -41,9 +40,11 @@ function Dashboard({ dispatcherName, onSignOut }: DashboardProps) {
     try {
       const result = await fetchHotspots()
       setServerHotspots(result.hotspots)
-      setIsStub(result.isStub)
       setLastSync(new Date())
       setHasLoaded(true)
+    } catch {
+      setHasLoaded(true)
+      setNotice('Could not reach dispatch. Hotspots were not loaded — try again.')
     } finally {
       setIsFetching(false)
     }
@@ -193,16 +194,6 @@ function Dashboard({ dispatcherName, onSignOut }: DashboardProps) {
             Claim
           </span>
           <span>{notice}</span>
-        </div>
-      )}
-
-      {isStub && hasLoaded && (
-        <div className="dash-banner" role="status">
-          <span className="pill is-warn">
-            <span className="dot" />
-            Backend unavailable
-          </span>
-          <span>Showing demo data — assignments, arrivals, and claims are not live.</span>
         </div>
       )}
 
