@@ -3,16 +3,6 @@ import QrScanner from 'qr-scanner'
 import { resolveHotspot, type Hotspot } from './api/hotspots'
 import './ScanPickup.css'
 
-/* ------------------------------------------------------------------------ *
- * PICKUP CONTRACT
- *
- * The only place in the frontend that knows what a civilian's pickup QR
- * contains and which call clears it. The backend is mid-change, so when the
- * shape moves, everything that has to move lives between these two rules —
- * the component below only ever sees a PickupTarget and a boolean.
- * ------------------------------------------------------------------------ */
-
-/** Query params the civilian's ReportStatus screen encodes into its QR. */
 const PICKUP_ID_PARAM = 'resolve'
 const PICKUP_TOKEN_PARAM = 'token'
 
@@ -21,27 +11,6 @@ export interface PickupTarget {
   token: string
 }
 
-/**
- * Read a scanned string as a SafeRoute pickup link.
- *
- * Parsed with the URL API rather than split on '?' and '&' because the value
- * comes off a camera pointed at the world: it can be any string at all, and a
- * hand-rolled parser turns malformed input into a plausible-looking id instead
- * of a clean rejection. `new URL` throws on anything that isn't an absolute
- * URL, which is exactly the answer we want.
- *
- * Hotspot ids are numbers, but a URL only ever yields strings, so the id is
- * converted here and rejected unless it survives the round trip. Number('')
- * is 0 and Number('12abc') is NaN, so both the emptiness and the integer-ness
- * are checked rather than trusting the cast.
- *
- * Deliberately not origin-checked. The demo is reached over a LAN https URL, an
- * ngrok host, and localhost, so pinning an origin would reject our own codes;
- * the token is verified server-side, so a QR pointing somewhere else still
- * can't clear a hotspot it doesn't already hold a valid token for.
- *
- * @returns the target, or null if this isn't a SafeRoute pickup link.
- */
 function parsePickupCode(scanned: string): PickupTarget | null {
   let url: URL
 
@@ -62,12 +31,9 @@ function parsePickupCode(scanned: string): PickupTarget | null {
   return { id, token }
 }
 
-/** Clear the scanned pickup. The one call to swap when the endpoint moves. */
 function confirmPickup(target: PickupTarget): Promise<boolean> {
   return resolveHotspot(target.id, target.token)
 }
-
-/* --------------------------- end pickup contract -------------------------- */
 
 type Phase = 'idle' | 'scanning' | 'review' | 'sending' | 'done' | 'error'
 

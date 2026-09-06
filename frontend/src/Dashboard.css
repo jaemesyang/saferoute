@@ -8,8 +8,6 @@
   border-inline: 1px solid var(--line);
 }
 
-/* ---- header ---- */
-
 .dash-head {
   display: flex;
   align-items: center;
@@ -70,8 +68,6 @@
   font-size: 13px;
 }
 
-/* ---- stats ---- */
-
 .dash-stats {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -104,8 +100,6 @@
 .stat-value.is-ok {
   color: var(--ok);
 }
-
-/* ---- list ---- */
 
 .dash-list {
   flex: 1;
@@ -218,8 +212,6 @@
   }
 }
 
-/* ---- view toggle ---- */
-
 .view-toggle {
   display: flex;
 }
@@ -243,8 +235,6 @@
   background: var(--accent-bg);
   z-index: 1;
 }
-
-/* ---- map ---- */
 
 
 .dash-map {
