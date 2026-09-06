@@ -1,18 +1,17 @@
 import { useState } from 'react'
-import Dashboard from './Dashboard.jsx'
-import ReportStatus from './ReportStatus.jsx'
-import RequestAccess from './RequestAccess.jsx'
-import VictimReport from './VictimReport.jsx'
+import Dashboard from './Dashboard'
+import ReportStatus from './ReportStatus'
+import RequestAccess from './RequestAccess'
+import VictimReport, { type ReportedResult } from './VictimReport'
 
 
 function App() {
   const [isDispatcher, setIsDispatcher] = useState(false)
   const [isApproved, setIsApproved] = useState(false)
   const [dispatcherName, setDispatcherName] = useState('')
-  const [report, setReport] = useState(null)
+  const [report, setReport] = useState<ReportedResult | null>(null)
 
-  /** @param {string} name */
-  function handleApprove(name) {
+  function handleApprove(name: string) {
     setDispatcherName(name)
     setIsApproved(true)
   }
@@ -22,10 +21,7 @@ function App() {
     setDispatcherName('')
   }
 
-  /**
-   * @param {{ assignment: import('./api/reports.js').Assignment, coords: { lat: number, lng: number }, isStub: boolean }} result
-   */
-  function handleReported(result) {
+  function handleReported(result: ReportedResult) {
     setReport(result)
   }
 

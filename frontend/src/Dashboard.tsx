@@ -1,40 +1,39 @@
 import { useCallback, useMemo, useState } from 'react'
-import { claimHotspot, fetchHotspots, resolveHotspot } from './api/hotspots.js'
-import { usePolling } from './hooks/usePolling.js'
-import { mergeHotspots } from './utils/hotspotState.js'
-import HotspotMap from './HotspotMap.jsx'
+import { claimHotspot, fetchHotspots, resolveHotspot, type Hotspot } from './api/hotspots'
+import { usePolling } from './hooks/usePolling'
+import { mergeHotspots } from './utils/hotspotState'
+import HotspotMap from './HotspotMap'
 import './Dashboard.css'
 
 const REFRESH_INTERVAL_MS = 15000
 
-function severityOf(assigned) {
+function severityOf(assigned: number) {
   if (assigned >= 40) return 'high'
   if (assigned >= 20) return 'med'
   return 'low'
 }
 
-function formatClock(date) {
+function formatClock(date: Date | null): string {
   if (!date) return '--:--:--'
   return date.toLocaleTimeString([], { hour12: false })
 }
 
-/**
- *
- * @param {Object} props
- * @param {string} props.dispatcherName
- * @param {() => void} props.onSignOut
- */
-function Dashboard({ dispatcherName, onSignOut }) {
-  const [serverHotspots, setServerHotspots] = useState([])
-  const [claims, setClaims] = useState({})
-  const [resolvedIds, setResolvedIds] = useState([])
+interface DashboardProps {
+  dispatcherName: string
+  onSignOut: () => void
+}
+
+function Dashboard({ dispatcherName, onSignOut }: DashboardProps) {
+  const [serverHotspots, setServerHotspots] = useState<Hotspot[]>([])
+  const [claims, setClaims] = useState<Record<string, string>>({})
+  const [resolvedIds, setResolvedIds] = useState<string[]>([])
   const [isStub, setIsStub] = useState(false)
   const [isFetching, setIsFetching] = useState(true)
   const [hasLoaded, setHasLoaded] = useState(false)
-  const [lastSync, setLastSync] = useState(null)
-  const [view, setView] = useState('list')
-  const [tokens, setTokens] = useState({})
-  const [notice, setNotice] = useState(null)
+  const [lastSync, setLastSync] = useState<Date | null>(null)
+  const [view, setView] = useState<'list' | 'map'>('list')
+  const [tokens, setTokens] = useState<Record<string, string>>({})
+  const [notice, setNotice] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     setIsFetching(true)
@@ -71,19 +70,18 @@ function Dashboard({ dispatcherName, onSignOut }) {
     [hotspots],
   )
 
-  /**
-   * @param {string} id
-   * @returns {Promise<void>}
-   */
-  async function handleClaim(id) {
+  async function handleClaim(id: string): Promise<void> {
     setClaims((prev) => ({ ...prev, [id]: dispatcherName }))
     setNotice(null)
 
     const result = await claimHotspot(id, dispatcherName)
 
     if (result.status === 'claimed') {
-      if (result.resolveToken) {
-        setTokens((prev) => ({ ...prev, [id]: result.resolveToken }))
+      // Bound to a local first: the narrowing below does not survive into the
+      // setState callback, where `result.resolveToken` is string | undefined.
+      const resolveToken = result.resolveToken
+      if (resolveToken) {
+        setTokens((prev) => ({ ...prev, [id]: resolveToken }))
       }
       await load()
       return
@@ -106,11 +104,7 @@ function Dashboard({ dispatcherName, onSignOut }) {
     await load()
   }
 
-  /**
-   * @param {string} id
-   * @returns {Promise<void>}
-   */
-  async function handleResolve(id) {
+  async function handleResolve(id: string): Promise<void> {
     setNotice(null)
 
     let token = tokens[id]

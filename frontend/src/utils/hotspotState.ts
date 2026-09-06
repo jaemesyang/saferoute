@@ -1,15 +1,13 @@
-/** 
- * @typedef {Object} LocalHotspotState
- * @property {Record<string, string>} claims hotspot id -> dispatcher who claimed it
- * @property {string[]} resolvedIds hotspots this dispatcher has already cleared
- */
+import type { Hotspot } from '../api/hotspots'
 
-/**
- * @param {import('../api/hotspots.js').Hotspot[]} incoming
- * @param {LocalHotspotState} local
- * @returns {import('../api/hotspots.js').Hotspot[]}
- */
-export function mergeHotspots(incoming, { claims, resolvedIds }) {
+export interface LocalHotspotState {
+  /** hotspot id -> dispatcher who claimed it */
+  claims: Record<string, string>
+  /** hotspots this dispatcher has already cleared */
+  resolvedIds: string[]
+}
+
+export function mergeHotspots(incoming: Hotspot[], { claims, resolvedIds }: LocalHotspotState): Hotspot[] {
   const resolved = new Set(resolvedIds)
 
   return incoming

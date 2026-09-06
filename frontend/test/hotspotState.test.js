@@ -1,7 +1,7 @@
-import test from 'node:test'
+import { test } from 'vitest'
 import assert from 'node:assert/strict'
-import { mergeHotspots } from '../src/utils/hotspotState.js'
-import { getStubHotspots } from '../src/api/hotspots.js'
+import { mergeHotspots } from '../src/utils/hotspotState'
+import { getStubHotspots } from '../src/api/hotspots'
 
 const SERVER = [
   { id: 'a', name: 'Baxter Arena', lat: 41.2336, lng: -95.9569, assigned: 12, arrived: 4, claimedBy: null },

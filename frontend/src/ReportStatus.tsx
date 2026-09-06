@@ -1,53 +1,42 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { fetchHotspots } from './api/hotspots.js'
-import { checkIn } from './api/reports.js'
-import { usePolling } from './hooks/usePolling.js'
-import { haversineMeters, requestLocation } from './utils/geo.js'
+import { fetchHotspots } from './api/hotspots'
+import { checkIn, type Assignment } from './api/reports'
+import { usePolling } from './hooks/usePolling'
+import { haversineMeters, requestLocation, type Coords } from './utils/geo'
 import './ReportStatus.css'
 
 const ARRIVAL_RADIUS_M = 50
 
 const POLL_INTERVAL_MS = 5000
 
-/**
-
- * @param {number} meters
- * @returns {string}
- */
-function formatDistance(meters) {
+function formatDistance(meters: number): string {
   if (meters < 1000) return `${Math.round(meters)} m`
   return `${(meters / 1000).toFixed(1)} km`
 }
 
-/**
- *
- * @param {Date} from
- * @param {Date | null} now
- * @returns {string}
- */
-function formatAge(from, now) {
+function formatAge(from: Date, now: Date | null): string {
   const seconds = Math.max(0, Math.round(((now ?? new Date()).getTime() - from.getTime()) / 1000))
   if (seconds < 60) return 'a few seconds ago'
   const minutes = Math.round(seconds / 60)
   return minutes === 1 ? 'a minute ago' : `${minutes} minutes ago`
 }
 
-/**
- * @param {Object} props
- * @param {import('./api/reports.js').Assignment} props.assignment
- * @param {{ lat: number, lng: number }} props.coords 
- * @param {boolean} props.isStub
- */
-function ReportStatus({ assignment, coords, isStub }) {
-  const [distance, setDistance] = useState(() => {
+interface ReportStatusProps {
+  assignment: Assignment
+  coords: Coords
+  isStub: boolean
+}
+
+function ReportStatus({ assignment, coords, isStub }: ReportStatusProps) {
+  const [distance, setDistance] = useState<{ meters: number, at: Date } | null>(() => {
     const meters = haversineMeters(coords.lat, coords.lng, assignment.lat, assignment.lng)
     return Number.isFinite(meters) ? { meters, at: new Date() } : null
   })
   const [isStale, setIsStale] = useState(false)
-  const [counts, setCounts] = useState(null)
+  const [counts, setCounts] = useState<{ assigned: number, arrived: number } | null>(null)
   const [isResolved, setIsResolved] = useState(false)
-  const [lastPoll, setLastPoll] = useState(null)
-  const [checkInPhase, setCheckInPhase] = useState('idle')
+  const [lastPoll, setLastPoll] = useState<Date | null>(null)
+  const [checkInPhase, setCheckInPhase] = useState<'idle' | 'sending' | 'done'>('idle')
 
   const hasSeenAssignment = useRef(false)
 

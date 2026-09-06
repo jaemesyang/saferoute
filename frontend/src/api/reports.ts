@@ -1,34 +1,30 @@
-import { PREDETERMINED_HOTSPOTS } from './hotspots.js'
-import { pickClosest } from '../utils/geo.js'
+import { PREDETERMINED_HOTSPOTS } from './hotspots'
+import { pickClosest, type Coords } from '../utils/geo'
 
-/**
- * @typedef {Object} Assignment
- * @property {string} id
- * @property {string} hotspotId
- * @property {string} name
- * @property {number} lat
- * @property {number} lng
- * @property {number} distanceToUser 
- */
+export interface Assignment {
+  id: string
+  hotspotId: string
+  name: string
+  lat: number
+  lng: number
+  distanceToUser: number
+}
 
-/**
- * @typedef {Object} ReportResult
- * @property {Assignment} assignment
- * @property {boolean} isStub
- */
+export interface ReportResult {
+  assignment: Assignment
+  isStub: boolean
+}
 
-/**
- *
- * @param {number} lat
- * @param {number} lng
- * @param {string} [apiUrl] 
- * @returns {Promise<ReportResult>}
- */
-export async function submitReport(lat, lng, apiUrl) {
+export async function submitReport(lat: number, lng: number, apiUrl?: string): Promise<ReportResult> {
   const coords = { lat, lng };
   const baseUrl = import.meta.env?.VITE_API_URL;
 
-  if (!baseUrl) return { confirmed: false, isStub: true };
+  // Pre-existing bug, left as-is: `apiUrl` is never read, so the caller's base
+  // URL is ignored, and this early return hands back a CheckInResult shape
+  // rather than a ReportResult — it also shadows the stub branch just below.
+  // The cast preserves the current runtime behaviour without weakening the
+  // declared signature.
+  if (!baseUrl) return { confirmed: false, isStub: true } as unknown as ReportResult;
 
   if (!baseUrl) {
     return { assignment: await getStubAssignment(coords), isStub: true };
@@ -67,19 +63,14 @@ export async function submitReport(lat, lng, apiUrl) {
   }
 }
 
-/**
- * @typedef {Object} CheckInResult
- * @property {boolean} confirmed
- * @property {boolean} isStub
- */
+export interface CheckInResult {
+  confirmed: boolean
+  isStub: boolean
+}
 
-/**
- * @param {string} assignmentId
- * @returns {Promise<CheckInResult>}
- */
 // TODO: implement — see JSDoc above.
 // eslint-disable-next-line no-unused-vars
-export async function checkIn(assignmentId) {
+export async function checkIn(assignmentId: string): Promise<CheckInResult> {
   const baseUrl = import.meta.env?.VITE_API_URL;
   if (!baseUrl) {
     return {confirmed: false, isStub: true};
@@ -99,11 +90,7 @@ export async function checkIn(assignmentId) {
   }
 }
 
-/**
- * @param {{ lat: number, lng: number }} coords
- * @returns {Promise<Assignment>}
- */
-export async function getStubAssignment(coords) {
+export async function getStubAssignment(coords: Coords): Promise<Assignment> {
   await new Promise(resolve => setTimeout(resolve, 500));
 
   const closest = pickClosest(coords, PREDETERMINED_HOTSPOTS);

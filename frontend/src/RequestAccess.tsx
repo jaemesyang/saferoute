@@ -1,17 +1,16 @@
 import { useState } from 'react'
 import './RequestAccess.css'
 
-/**
- * @param {Object} props
- * @param {(name: string) => void} props.onApprove
- */
-function RequestAccess({ onApprove }) {
+interface RequestAccessProps {
+  onApprove: (name: string) => void
+}
+
+function RequestAccess({ onApprove }: RequestAccessProps) {
   const [name, setName] = useState('')
   const [code, setCode] = useState('')
   const [error, setError] = useState('')
 
-  /** @param {React.FormEvent<HTMLFormElement>} event */
-  function handleSubmit(event) {
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
     const trimmedName = name.trim()

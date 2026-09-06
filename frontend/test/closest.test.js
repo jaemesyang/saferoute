@@ -1,6 +1,6 @@
-import test from 'node:test'
+import { test } from 'vitest'
 import assert from 'node:assert/strict'
-import { submitReport, getStubAssignment } from '../src/api/reports.js'
+import { submitReport, getStubAssignment } from '../src/api/reports'
 
 // Baxter Arena is at 41.2336, -95.9569. Standing a block away, the closest
 // predetermined hotspot is Baxter Arena — not whatever is hardcoded.
@@ -64,7 +64,7 @@ test('submitReport posts to the reports endpoint and normalises its shape', asyn
 test('assignment id matches an entry in the polled hotspot list', async () => {
   // ReportStatus finds the assignment counts with `spot.id === assignment.id`, and
   // treats a missing id as "this hotspot is resolved".
-  const { getStubHotspots } = await import('../src/api/hotspots.js')
+  const { getStubHotspots } = await import('../src/api/hotspots')
   const assignment = await getStubAssignment(NEAR_BAXTER)
   const hotspots = await getStubHotspots()
   const match = hotspots.find((spot) => spot.id === assignment.id)
