@@ -1,4 +1,5 @@
-import { useCallback, useMemo, useState } from 'react'
+import { Fragment, useCallback, useMemo, useState } from 'react'
+import { QRCodeSVG } from 'qrcode.react'
 import { claimHotspot, fetchHotspots, resolveHotspot, type Hotspot } from './api/hotspots'
 import { usePolling } from './hooks/usePolling'
 import { mergeHotspots } from './utils/hotspotState'
@@ -13,10 +14,21 @@ function severityOf(assigned: number) {
   return 'low'
 }
 
+function resolveUrlFor(id: string, token: string): string {
+  const url = new URL(window.location.origin)
+  url.searchParams.set('resolve', id)
+  url.searchParams.set('token', token)
+  return url.toString()
+}
+
 function formatClock(date: Date | null): string {
   if (!date) return '--:--:--'
   return date.toLocaleTimeString([], { hour12: false })
 }
+
+
+const TOKEN_LOST =
+  'This tab lost the code for that pickup (a reload clears it). Claim it again to mint a new one — any code already shown will stop working.'
 
 interface DashboardProps {
   dispatcherName: string
@@ -34,6 +46,8 @@ function Dashboard({ dispatcherName, onSignOut }: DashboardProps) {
   const [view, setView] = useState<'list' | 'map'>('list')
   const [tokens, setTokens] = useState<Record<number, string>>({})
   const [notice, setNotice] = useState<string | null>(null)
+  // One QR open at a time — two codes on screen is how the wrong one gets scanned.
+  const [qrFor, setQrFor] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     setIsFetching(true)
@@ -78,6 +92,7 @@ function Dashboard({ dispatcherName, onSignOut }: DashboardProps) {
 
     if (result) {
       setTokens((prev) => ({ ...prev, [id]: result.resolveToken }))
+      setQrFor((prev) => (prev === id ? null : prev))
       await load()
       return
     }
@@ -96,15 +111,38 @@ function Dashboard({ dispatcherName, onSignOut }: DashboardProps) {
   async function handleResolve(id: number): Promise<void> {
     setNotice(null)
 
-    const result = await resolveHotspot(id, tokens[id])
+    const token = tokens[id]
+    if (!token) {
+      setNotice(TOKEN_LOST)
+      return
+    }
 
-    if (!result) {
+    const resolved = await resolveHotspot(id, token)
+
+    if (!resolved) {
       setNotice('Could not reach dispatch. Hotspot not resolved — try again.')
       return
     }
 
     setResolvedIds((prev) => (prev.includes(id) ? prev : [...prev, id]))
+    setQrFor((prev) => (prev === id ? null : prev))
     await load()
+  }
+
+  function handleToggleQr(id: string): void {
+    if (qrFor === id) {
+      setQrFor(null)
+      return
+    }
+
+    setNotice(null)
+
+    if (!tokens[id]) {
+      setNotice(TOKEN_LOST)
+      return
+    }
+
+    setQrFor(id)
   }
 
   return (
@@ -220,44 +258,78 @@ function Dashboard({ dispatcherName, onSignOut }: DashboardProps) {
           )}
 
           {sorted.map((spot) => (
-            <div className="row" key={spot.id}>
-              <span className={`col-sev sev-${severityOf(spot.assigned)}`} />
-              <span className="col-name">{spot.name}</span>
-              <span className="col-assigned">{spot.assigned}</span>
-              <span className="col-arrived">{spot.arrived}</span>
-              <span className="col-action">
-                {spot.claimedBy ? (
-                  <>
-                    <span
-                      className={
-                        spot.claimedBy === dispatcherName
-                          ? 'pill is-ok'
-                          : 'pill is-dim'
-                      }
-                    >
-                      Claimed by {spot.claimedBy}
-                    </span>
-                    {spot.claimedBy === dispatcherName && (
-                      <button
-                        className="btn"
-                        type="button"
-                        onClick={() => handleResolve(spot.id)}
+            <Fragment key={spot.id}>
+              <div className="row">
+                <span className={`col-sev sev-${severityOf(spot.assigned)}`} />
+                <span className="col-name">{spot.name}</span>
+                <span className="col-assigned">{spot.assigned}</span>
+                <span className="col-arrived">{spot.arrived}</span>
+                <span className="col-action">
+                  {spot.claimedBy ? (
+                    <>
+                      <span
+                        className={
+                          spot.claimedBy === dispatcherName
+                            ? 'pill is-ok'
+                            : 'pill is-dim'
+                        }
                       >
-                        Resolve
-                      </button>
-                    )}
-                  </>
-                ) : (
-                  <button
-                    className="btn btn-primary"
-                    type="button"
-                    onClick={() => handleClaim(spot.id)}
-                  >
-                    Claim
-                  </button>
-                )}
-              </span>
-            </div>
+                        Claimed by {spot.claimedBy}
+                      </span>
+                      {spot.claimedBy === dispatcherName && (
+                        <>
+                          <button
+                            className="btn"
+                            type="button"
+                            onClick={() => handleToggleQr(spot.id)}
+                            aria-pressed={qrFor === spot.id}
+                          >
+                            {qrFor === spot.id ? 'Hide QR' : 'Show QR'}
+                          </button>
+                          <button
+                            className="btn"
+                            type="button"
+                            onClick={() => handleResolve(spot.id)}
+                          >
+                            Resolve
+                          </button>
+                        </>
+                      )}
+                    </>
+                  ) : (
+                    <button
+                      className="btn btn-primary"
+                      type="button"
+                      onClick={() => handleClaim(spot.id)}
+                    >
+                      Claim
+                    </button>
+                  )}
+                </span>
+              </div>
+
+              {qrFor === spot.id && tokens[spot.id] && (
+                <div className="qr-panel">
+                  {/* White plate behind the code: scanners need the light
+                      quiet zone, and this console is otherwise near-black. */}
+                  <div className="qr-plate">
+                    <QRCodeSVG
+                      value={resolveUrlFor(spot.id, tokens[spot.id])}
+                      size={172}
+                      level="M"
+                    />
+                  </div>
+                  <div className="qr-meta">
+                    <span className="label">Scan to resolve</span>
+                    <p className="qr-caption">{spot.name}</p>
+                    <p className="qr-hint">
+                      Hold this up for the driver once the pickup is done. They
+                      confirm on their own phone — no sign-in needed.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </Fragment>
           ))}
         </main>
       ) : (
