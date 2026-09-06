@@ -12,6 +12,14 @@ const ERRORS = {
     "We couldn't send your location. Check your signal and try again."
 }
 
+const LEDE = {
+  unknown: 'Can you walk to safety?',
+  canWalk: "Share where you are and we'll send you to the nearest safe place.",
+  cannotWalk: 'Stay where you are.'
+}
+
+type Mobility = 'unknown' | 'canWalk' | 'cannotWalk'
+
 export interface ReportedResult {
   assignment: Assignment
   coords: Coords
@@ -23,6 +31,7 @@ interface VictimReportProps {
 }
 
 function VictimReport({ onReported, onDispatcherAccess }: VictimReportProps) {
+  const [mobility, setMobility] = useState<Mobility>('unknown')
   const [phase, setPhase] = useState<'idle' | 'locating' | 'sending'>('idle')
   const [error, setError] = useState('')
 
@@ -58,50 +67,105 @@ function VictimReport({ onReported, onDispatcherAccess }: VictimReportProps) {
     }
   }
 
+  function handleReconsider() {
+    setError('')
+    setMobility('unknown')
+  }
+
   return (
     <main className="report">
       <div className="report-inner">
         <header className="report-head">
           <span className="report-mark">SAFEROUTE</span>
-          <p className="report-lede">
-            Share where you are and we'll send you to the nearest safe place.
-          </p>
+          <p className="report-lede">{LEDE[mobility]}</p>
         </header>
 
-        <button
-          className="btn btn-primary report-action"
-          type="button"
-          onClick={handleShare}
-          disabled={isBusy}
-        >
-          {isBusy ? 'Working…' : 'Share my location'}
-        </button>
+        {mobility === 'unknown' && (
+          <>
+            <div className="report-choice">
+              <button
+                className="btn btn-primary report-action"
+                type="button"
+                onClick={() => setMobility('canWalk')}
+              >
+                Yes, I can walk
+              </button>
+              <button
+                className="btn report-action"
+                type="button"
+                onClick={() => setMobility('cannotWalk')}
+              >
+                No — I'm injured
+              </button>
+            </div>
 
-        {isBusy && (
-          <p className="report-status" role="status">
-            <span className="dot" />
-            {phase === 'locating'
-              ? 'Finding where you are…'
-              : 'Looking for a safe place near you…'}
-          </p>
+            <p className="report-note">
+              This only changes what we ask you to do next.
+            </p>
+          </>
         )}
 
-        {error && !isBusy && (
-          <div className="report-error" role="alert">
-            <p className="report-error-text">{error}</p>
+        {mobility === 'canWalk' && (
+          <>
             <button
-              className="btn report-retry"
+              className="btn btn-primary report-action"
               type="button"
               onClick={handleShare}
+              disabled={isBusy}
             >
-              Try again
+              {isBusy ? 'Working…' : 'Share my location'}
             </button>
-          </div>
+
+            {isBusy && (
+              <p className="report-status" role="status">
+                <span className="dot" />
+                {phase === 'locating'
+                  ? 'Finding where you are…'
+                  : 'Looking for a safe place near you…'}
+              </p>
+            )}
+
+            {error && !isBusy && (
+              <div className="report-error" role="alert">
+                <p className="report-error-text">{error}</p>
+                <button
+                  className="btn report-retry"
+                  type="button"
+                  onClick={handleShare}
+                >
+                  Try again
+                </button>
+              </div>
+            )}
+
+            <p className="report-note">
+              Your location is only used to find you a safe place to go.
+            </p>
+          </>
         )}
 
-        <p className="report-note">
-          Your location is only used to find you a safe place to go.
-        </p>
+        {mobility === 'cannotWalk' && (
+          <>
+            <div className="report-stay" role="status">
+              <p className="report-stay-text">
+                Do not try to walk. Moving with an injury can make it worse, and it
+                makes you harder to find.
+              </p>
+              <p className="report-stay-text">
+                Call 911 now if you haven't already. Nothing has been sent from this
+                screen — a phone call is what brings help to you.
+              </p>
+            </div>
+
+            <button
+              className="report-reconsider"
+              type="button"
+              onClick={handleReconsider}
+            >
+              I can walk after all
+            </button>
+          </>
+        )}
       </div>
 
       <button
