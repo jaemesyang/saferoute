@@ -1,4 +1,3 @@
-import 'dotenv/config'
 import express from 'express';
 import { hotspotRouter } from './modules/hotspots/hotspot.routes.js';
 import {rescueRequestRouter} from './modules/rescueRequests/rescueRequest.routes.js';

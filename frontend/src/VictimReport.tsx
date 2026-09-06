@@ -43,10 +43,6 @@ function VictimReport({ onReported, onDispatcherAccess }: VictimReportProps) {
       setPhase('locating')
       coords = await requestLocation()
     } catch (err) {
-      // requestLocation rejects with either a GeolocationPositionError (code 1
-      // is "permission denied") or a plain Error when geolocation is missing.
-      // Narrowing `unknown` properly would mean adding runtime checks, so this
-      // is a cast over the two shapes that actually arrive here.
       const locationError = err as { code?: number, message?: string } | null | undefined
       setError(locationError?.code === 1 ? ERRORS.permission : locationError?.message || ERRORS.permission)
       setPhase('idle')

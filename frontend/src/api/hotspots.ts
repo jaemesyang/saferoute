@@ -47,8 +47,8 @@ export interface ClaimResult {
   resolveToken: string
 }
 
-export async function claimHotspot(id: string, dispatcherName: string, apiUrl?: string): Promise<ClaimResult | null> {
-  const baseUrl = apiUrl ?? import.meta.env?.VITE_API_URL;
+export async function claimHotspot(id: string, dispatcherName: string): Promise<ClaimResult | null> {
+  const baseUrl = import.meta.env?.VITE_API_URL;
 
   if (!baseUrl) {
     return null;
@@ -69,8 +69,8 @@ export async function claimHotspot(id: string, dispatcherName: string, apiUrl?: 
   }
 }
 
-export async function resolveHotspot(id: string, token: string, apiUrl?: string): Promise<boolean> {
-  const baseUrl = apiUrl ?? import.meta.env?.VITE_API_URL;
+export async function resolveHotspot(id: string, token: string): Promise<boolean> {
+  const baseUrl = import.meta.env?.VITE_API_URL;
 
   if (!baseUrl || !token) {
     return false;

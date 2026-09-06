@@ -2,14 +2,10 @@ import {db} from "../../db/index.js";
 import {hotspots, rescueRequests} from "../../db/schema.js";
 import {ArrivedInput, CreateReportInput} from "./rescueRequest.schema.js";
 import {sql, eq, and, isNotNull} from 'drizzle-orm';
-import {ClosestHotspot, Point, ReportAssignment} from './rescueRequest.types.js';
+import {ClosestHotspot, ReportAssignment} from './rescueRequest.types.js';
 
 async function getClosest(input: CreateReportInput): Promise<ClosestHotspot | null> {
-  const point: Point = {
-    x: input.lng,
-    y: input.lat
-  };
-  const sqlPoint = sql`ST_SetSRID(ST_MakePoint(${point.x}, ${point.y}), 4326)`;
+  const sqlPoint = sql`ST_SetSRID(ST_MakePoint(${input.lng}, ${input.lat}), 4326)`;
 
   const [closest] = await db
     .select({

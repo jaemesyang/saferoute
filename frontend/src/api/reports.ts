@@ -15,16 +15,9 @@ export interface ReportResult {
   isStub: boolean
 }
 
-export async function submitReport(lat: number, lng: number, apiUrl?: string): Promise<ReportResult> {
+export async function submitReport(lat: number, lng: number): Promise<ReportResult> {
   const coords = { lat, lng };
   const baseUrl = import.meta.env?.VITE_API_URL;
-
-  // Pre-existing bug, left as-is: `apiUrl` is never read, so the caller's base
-  // URL is ignored, and this early return hands back a CheckInResult shape
-  // rather than a ReportResult — it also shadows the stub branch just below.
-  // The cast preserves the current runtime behaviour without weakening the
-  // declared signature.
-  if (!baseUrl) return { confirmed: false, isStub: true } as unknown as ReportResult;
 
   if (!baseUrl) {
     return { assignment: await getStubAssignment(coords), isStub: true };
@@ -68,8 +61,6 @@ export interface CheckInResult {
   isStub: boolean
 }
 
-// TODO: implement — see JSDoc above.
-// eslint-disable-next-line no-unused-vars
 export async function checkIn(assignmentId: string): Promise<CheckInResult> {
   const baseUrl = import.meta.env?.VITE_API_URL;
   if (!baseUrl) {
