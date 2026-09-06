@@ -50,14 +50,45 @@ export async function fetchHotspots() {
 }
 
 /**
+ * @type {Map<string, string>}
+ */
+const STUB_CLAIMS = new Map(
+  PREDETERMINED_HOTSPOTS.filter((_, i) => i % 4 === 0).map(loc => [loc.id, 'dispatchera'])
+);
+
+/**
+ * @type {Map<string, number> | null}
+ */
+let stubHeadcounts = null;
+
+/**
+ * @returns {Map<string, number>}
+ */
+function driftStubHeadcounts() {
+  if (!stubHeadcounts) {
+    stubHeadcounts = new Map(
+      PREDETERMINED_HOTSPOTS.map(loc => [loc.id, Math.floor(Math.random() * 60) + 1])
+    );
+    return stubHeadcounts;
+  }
+
+  for (const [id, count] of stubHeadcounts) {
+    stubHeadcounts.set(id, Math.max(1, count + Math.floor(Math.random() * 7) - 3));
+  }
+  return stubHeadcounts;
+}
+
+/**
  * @returns {Promise<Hotspot[]>}
  */
 export async function getStubHotspots() {
   await new Promise(resolve => setTimeout(resolve, 500));
 
-  return PREDETERMINED_HOTSPOTS.map((loc, i) => ({
+  const headcounts = driftStubHeadcounts();
+
+  return PREDETERMINED_HOTSPOTS.map(loc => ({
     ...loc,
-    headcount: Math.floor(Math.random() * 60) + 1,
-    claimedBy: i % 4 === 0 ? 'dispatchera' : null
+    headcount: headcounts.get(loc.id) ?? 1,
+    claimedBy: STUB_CLAIMS.get(loc.id) ?? null
   }))
 }

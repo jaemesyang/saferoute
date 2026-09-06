@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { fetchHotspots } from './api/hotspots.js'
 import { usePolling } from './hooks/usePolling.js'
+import { mergeHotspots } from './utils/hotspotState.js'
 import HotspotMap from './HotspotMap.jsx'
 import './Dashboard.css'
 
@@ -24,7 +25,9 @@ function formatClock(date) {
  * @param {() => void} props.onSignOut
  */
 function Dashboard({ dispatcherName, onSignOut }) {
-  const [hotspots, setHotspots] = useState([])
+  const [serverHotspots, setServerHotspots] = useState([])
+  const [claims, setClaims] = useState({})
+  const [resolvedIds, setResolvedIds] = useState([])
   const [isStub, setIsStub] = useState(false)
   const [isFetching, setIsFetching] = useState(true)
   const [hasLoaded, setHasLoaded] = useState(false)
@@ -35,7 +38,7 @@ function Dashboard({ dispatcherName, onSignOut }) {
     setIsFetching(true)
     try {
       const result = await fetchHotspots()
-      setHotspots(result.hotspots)
+      setServerHotspots(result.hotspots)
       setIsStub(result.isStub)
       setLastSync(new Date())
       setHasLoaded(true)
@@ -44,11 +47,12 @@ function Dashboard({ dispatcherName, onSignOut }) {
     }
   }, [])
 
-  useEffect(() => {
-    load()
-  }, [load])
-
   usePolling(load, REFRESH_INTERVAL_MS)
+
+  const hotspots = useMemo(
+    () => mergeHotspots(serverHotspots, { claims, resolvedIds }),
+    [serverHotspots, claims, resolvedIds],
+  )
 
   const sorted = useMemo(
     () => [...hotspots].sort((a, b) => b.headcount - a.headcount),
@@ -70,7 +74,7 @@ function Dashboard({ dispatcherName, onSignOut }) {
    * @returns {void}
    */
   function handleClaim(id) {
-    setHotspots(hotspots.map((spot) => spot.id === id ? { ...spot, claimedBy: dispatcherName } : spot))
+    setClaims((prev) => ({ ...prev, [id]: dispatcherName }))
   }
 
   /**   *
@@ -78,7 +82,7 @@ function Dashboard({ dispatcherName, onSignOut }) {
    * @returns {void}
    */
   function handleResolve(id) {
-    setHotspots(hotspots.filter((spot) => spot.id !== id))
+    setResolvedIds((prev) => (prev.includes(id) ? prev : [...prev, id]))
   }
 
   return (
