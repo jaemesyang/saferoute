@@ -5,6 +5,7 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   plugins: [react()],
   server: {
-    allowedHosts: ['deferred-prone-segment.ngrok-free.dev'],
+    host: true,
+    allowedHosts: ['deferred-prone-segment.ngrok-free.dev', '.trycloudflare.com'],
   },
 })

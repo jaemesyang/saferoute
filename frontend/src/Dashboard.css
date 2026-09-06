@@ -115,7 +115,7 @@
 
 .row {
   display: grid;
-  grid-template-columns: 3px 1fr 120px 120px 330px;
+  grid-template-columns: 3px 1fr 120px 120px 250px;
   align-items: center;
   gap: 14px;
   padding: 0 18px 0 0;
@@ -178,8 +178,6 @@
 .col-action {
   display: flex;
   justify-content: flex-end;
-  align-items: center;
-  gap: 8px;
 }
 
 .row-head .col-action {
@@ -218,56 +216,7 @@
   }
 
   .row {
-    min-width: 840px;
-  }
-}
-
-/* ---- qr ---- */
-
-.qr-panel {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  padding: 18px;
-  border-bottom: 1px solid var(--line);
-  background: var(--panel);
-}
-
-/* QR codes need a light background and a quiet zone to scan reliably, so the
-   plate stays white regardless of the dark console around it. */
-.qr-plate {
-  display: flex;
-  padding: 12px;
-  background: #fff;
-  border-radius: 2px;
-  flex: none;
-}
-
-.qr-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  min-width: 0;
-}
-
-.qr-caption {
-  margin: 0;
-  font-size: 15px;
-  color: var(--text);
-}
-
-.qr-hint {
-  margin: 0;
-  max-width: 46ch;
-  color: var(--dim);
-  font-size: 13px;
-  line-height: 1.4;
-}
-
-@media (max-width: 720px) {
-  .qr-panel {
-    flex-direction: column;
-    align-items: flex-start;
+    min-width: 760px;
   }
 }
 
