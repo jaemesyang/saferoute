@@ -15,3 +15,15 @@ export type ReportAssignment = {
   distanceMeters: number
   qrToken: string
 }
+
+export type PickupResult =
+  | {
+  status: 'pickedup' | 'already_pickedup';
+  pickedUp: number;
+  total: number;
+  remaining: number;
+  allPickedUp: boolean;
+}
+  | {
+  status: 'invalid';
+};

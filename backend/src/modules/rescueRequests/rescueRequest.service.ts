@@ -1,8 +1,8 @@
 import {db} from "../../db/index.js";
 import {hotspots, rescueRequests} from "../../db/schema.js";
 import {ArrivedInput, CreateReportInput, PickupInput} from "./rescueRequest.schema.js";
-import {sql, eq, and, isNotNull, ne} from 'drizzle-orm';
-import {ClosestHotspot, ReportAssignment} from './rescueRequest.types.js';
+import {and, count, eq, isNotNull, ne, sql} from 'drizzle-orm';
+import {ClosestHotspot, PickupResult, ReportAssignment} from './rescueRequest.types.js';
 
 async function getClosest(input: CreateReportInput): Promise<ClosestHotspot | null> {
   const sqlPoint = sql`ST_SetSRID(ST_MakePoint(${input.lng}, ${input.lat}), 4326)`;
@@ -105,20 +105,74 @@ export async function arrived(input: ArrivedInput) {
   })
 }
 
-export async function pickup(input: PickupInput) {
-  await db.transaction(async (tx) => {
-    await tx
+
+export async function pickup(input: PickupInput): Promise<PickupResult> {
+  return db.transaction(async (tx) => {
+    const [updated] = await tx
       .update(rescueRequests)
       .set({
-        status: 'pickedup'
+        status: 'pickedup',
       })
       .where(
         and(
           eq(rescueRequests.qrToken, input.token),
-          ne(rescueRequests.status, 'pickedup')
-        )
+          ne(rescueRequests.status, 'pickedup'),
+        ),
       )
-      .returning()
+      .returning({
+        assignedHotspotId: rescueRequests.assignedHotspotId,
+      });
 
-  })
+    let hotspotId: number | null;
+    let pickupStatus: 'pickedup' | 'already_pickedup';
+
+    if (updated) {
+      hotspotId = updated.assignedHotspotId;
+      pickupStatus = 'pickedup';
+    } else {
+      const [existing] = await tx
+        .select({
+          assignedHotspotId: rescueRequests.assignedHotspotId,
+          status: rescueRequests.status,
+        })
+        .from(rescueRequests)
+        .where(eq(rescueRequests.qrToken, input.token))
+        .limit(1);
+
+      if (!existing) {
+        return {
+          status: 'invalid',
+        };
+      }
+
+      hotspotId = existing.assignedHotspotId;
+      pickupStatus = 'already_pickedup';
+    }
+
+
+    if (hotspotId === null) {
+      throw new Error('Rescue request is not assigned to a hotspot');
+    }
+
+    const [stats] = await tx
+      .select({
+        total: count(),
+        pickedUp: sql<number>`
+          count(*) filter (
+            where ${rescueRequests.status} = 'pickedup'
+          )::int
+        `,
+      })
+      .from(rescueRequests)
+      .where(eq(rescueRequests.assignedHotspotId, hotspotId));
+
+
+    return {
+      status: pickupStatus,
+      pickedUp: stats.pickedUp,
+      total: stats.total,
+      remaining: stats.total - stats.pickedUp,
+      allPickedUp: stats.total === stats.pickedUp,
+    };
+  });
 }
