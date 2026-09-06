@@ -1,6 +1,6 @@
 import {db} from "../../db/index.js";
 import {hotspots, rescueRequests} from "../../db/schema.js";
-import {CreateReportInput} from "./rescueRequest.schema.js";
+import {ArrivedInput, CreateReportInput} from "./rescueRequest.schema.js";
 import {sql} from 'drizzle-orm';
 import {eq} from 'drizzle-orm';
 import {ClosestHotspot, Point, ReportAssignment} from './rescueRequest.types.js';
@@ -10,17 +10,35 @@ async function getClosest(input: CreateReportInput): Promise<ClosestHotspot | nu
     x: input.lng,
     y: input.lat
   };
-  const sqlPoint = sql`ST_SetSRID(ST_MakePoint(${point.x}, ${point.y}), 4326)`;
+  const sqlPoint = sql`ST_SetSRID
+  (ST_MakePoint(
+  ${point.x},
+  ${point.y}
+  ),
+  4326
+  )`;
 
   const [closest] = await db
     .select({
       id: hotspots.id,
       name: hotspots.name,
       location: hotspots.location,
-      distanceMeters: sql<number>`ST_Distance(${hotspots.location}::geography, ${sqlPoint}::geography)`,
+      distanceMeters: sql<number>`ST_Distance
+      (
+      ${hotspots.location}
+      :
+      :
+      geography,
+      ${sqlPoint}
+      :
+      :
+      geography
+      )`,
     })
     .from(hotspots)
-    .orderBy(sql`${hotspots.location} <-> ${sqlPoint}`)
+    .orderBy(sql`${hotspots.location}
+    <->
+    ${sqlPoint}`)
     .limit(1);
 
   if (!closest) {
@@ -46,14 +64,16 @@ export async function createReport(input: CreateReportInput): Promise<ReportAssi
   const report = await db.transaction(async (tx) => {
     await tx
       .update(hotspots)
-      .set({assigned: sql`${hotspots.assigned} + 1`})
+      .set({
+        assigned: sql`${hotspots.assigned} + 1`
+      })
       .where(eq(hotspots.id, closest.id));
 
     const [created] = await tx
       .insert(rescueRequests)
       .values({
         assignedHotspotId: closest.id,
-        status: 'pending',
+        status: 'assigned',
       })
       .returning({id: rescueRequests.id});
 
@@ -67,4 +87,16 @@ export async function createReport(input: CreateReportInput): Promise<ReportAssi
     lng: closest.lng,
     distanceMeters: closest.distanceMeters,
   };
+}
+
+export async function arrived(input: ArrivedInput) {
+  await db.transaction(async (tx) => {
+    await tx
+      .update(hotspots)
+      .set({
+        assigned: sql`${hotspots.assigned} - 1`,
+        arrived: sql`${hotspots.arrived}+ 1`
+      })
+      .where(eq(hotspots.id, input.id))
+  })
 }

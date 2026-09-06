@@ -6,4 +6,6 @@ export async function createReport(req: Request, res: Response) {
   res.json(report);
 }
 
-// export async function arrived()
+export async function arrived(req: Request, res: Response) {
+  await rescueRequestService.arrived(req.body);
+}
