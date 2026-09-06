@@ -61,13 +61,20 @@ export async function claimHotspot(input: ClaimHotspotInput) {
 }
 
 export async function resolveHotspot(input: ResolveHotspotInput) {
-  const deleted = await db
-    .delete(hotspots)
+  const [deleted] = await db
+    .select({ id: hotspots.id })
+    .from(hotspots)
     .where(and(eq(hotspots.id, input.id), eq(hotspots.resolveToken, input.token)))
-    .returning({ id: hotspots.id });
+    .limit(1);
 
-  if (deleted.length > 0) await db
-    .update(rescueRequests)
-    .set({ assignedHotspotId: null })
-    .where(eq(rescueRequests.assignedHotspotId, input.id));
+  if (deleted) {
+    await db
+      .update(rescueRequests)
+      .set({ assignedHotspotId: null })
+      .where(eq(rescueRequests.assignedHotspotId, input.id));
+
+    await db
+      .delete(hotspots)
+      .where(eq(hotspots.id, input.id));
+  }
 }
