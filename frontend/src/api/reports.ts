@@ -2,8 +2,8 @@ import { PREDETERMINED_HOTSPOTS } from './hotspots'
 import { pickClosest, type Coords } from '../utils/geo'
 
 export interface Assignment {
-  id: string
-  hotspotId: string
+  id: number
+  hotspotId: number
   name: string
   lat: number
   lng: number
@@ -40,8 +40,8 @@ export async function submitReport(lat: number, lng: number): Promise<ReportResu
 
     return {
       assignment: {
-        id: String(closest.id),
-        hotspotId: String(closest.hotspotId),
+        id: Number(closest.id),
+        hotspotId: Number(closest.hotspotId),
         name: closest.name,
         lat: closest.lat,
         lng: closest.lng,
@@ -61,7 +61,7 @@ export interface CheckInResult {
   isStub: boolean
 }
 
-export async function checkIn(assignmentId: string): Promise<CheckInResult> {
+export async function checkIn(assignmentId: number): Promise<CheckInResult> {
   const baseUrl = import.meta.env?.VITE_API_URL;
   if (!baseUrl) {
     return {confirmed: false, isStub: true};

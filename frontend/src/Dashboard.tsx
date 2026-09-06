@@ -25,14 +25,14 @@ interface DashboardProps {
 
 function Dashboard({ dispatcherName, onSignOut }: DashboardProps) {
   const [serverHotspots, setServerHotspots] = useState<Hotspot[]>([])
-  const [claims, setClaims] = useState<Record<string, string>>({})
-  const [resolvedIds, setResolvedIds] = useState<string[]>([])
+  const [claims, setClaims] = useState<Record<number, string>>({})
+  const [resolvedIds, setResolvedIds] = useState<number[]>([])
   const [isStub, setIsStub] = useState(false)
   const [isFetching, setIsFetching] = useState(true)
   const [hasLoaded, setHasLoaded] = useState(false)
   const [lastSync, setLastSync] = useState<Date | null>(null)
   const [view, setView] = useState<'list' | 'map'>('list')
-  const [tokens, setTokens] = useState<Record<string, string>>({})
+  const [tokens, setTokens] = useState<Record<number, string>>({})
   const [notice, setNotice] = useState<string | null>(null)
 
   const load = useCallback(async () => {
@@ -70,7 +70,7 @@ function Dashboard({ dispatcherName, onSignOut }: DashboardProps) {
     [hotspots],
   )
 
-  async function handleClaim(id: string): Promise<void> {
+  async function handleClaim(id: number): Promise<void> {
     setClaims((prev) => ({ ...prev, [id]: dispatcherName }))
     setNotice(null)
 
@@ -93,7 +93,7 @@ function Dashboard({ dispatcherName, onSignOut }: DashboardProps) {
     await load()
   }
 
-  async function handleResolve(id: string): Promise<void> {
+  async function handleResolve(id: number): Promise<void> {
     setNotice(null)
 
     const result = await resolveHotspot(id, tokens[id])

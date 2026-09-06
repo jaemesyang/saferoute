@@ -1,10 +1,10 @@
 import type { Hotspot } from '../api/hotspots'
 
 export interface LocalHotspotState {
-  /** hotspot id -> dispatcher who claimed it */
-  claims: Record<string, string>
-  /** hotspots this dispatcher has already cleared */
-  resolvedIds: string[]
+  // hotspot id -> dispatcher who claimed it
+  claims: Record<number, string>
+  // hotspots this dispatcher has already cleared
+  resolvedIds: number[]
 }
 
 export function mergeHotspots(incoming: Hotspot[], { claims, resolvedIds }: LocalHotspotState): Hotspot[] {

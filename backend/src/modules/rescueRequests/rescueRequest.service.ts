@@ -58,7 +58,7 @@ export async function createReport(input: CreateReportInput): Promise<ReportAssi
   });
 
   return {
-    id: String(report.id),
+    id: report.id,
     hotspotId: closest.id,
     name: closest.name,
     lat: closest.lat,

@@ -79,6 +79,7 @@ function ReportStatus({ assignment, coords, isStub }: ReportStatusProps) {
     setCheckInPhase('sending')
     try {
       await checkIn(assignment.id)
+      await refresh()
     } catch {
     }
     setCheckInPhase('done')

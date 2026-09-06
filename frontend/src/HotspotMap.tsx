@@ -43,7 +43,7 @@ function FitToHotspots({ hotspots }: { hotspots: Hotspot[] }) {
 interface HotspotMapProps {
   hotspots: Hotspot[]
   dispatcherName: string
-  onClaim: (id: string) => void
+  onClaim: (id: number) => void
 }
 
 function HotspotMap({ hotspots, dispatcherName, onClaim }: HotspotMapProps) {
