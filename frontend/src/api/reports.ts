@@ -10,11 +10,7 @@ export interface Assignment {
   qrToken: string
 }
 
-export interface ReportResult {
-  assignment: Assignment
-}
-
-export async function submitReport(lat: number, lng: number): Promise<ReportResult> {
+export async function submitReport(lat: number, lng: number): Promise<Assignment> {
   const response = await apiFetch('/api/reports', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -26,15 +22,13 @@ export async function submitReport(lat: number, lng: number): Promise<ReportResu
   }
 
   return {
-    assignment: {
-      id: Number(closest.id),
-      hotspotId: Number(closest.hotspotId),
-      name: closest.name,
-      lat: closest.lat,
-      lng: closest.lng,
-      distanceToUser: Number(closest.distanceMeters),
-      qrToken: closest.qrToken
-    }
+    id: Number(closest.id),
+    hotspotId: Number(closest.hotspotId),
+    name: closest.name,
+    lat: closest.lat,
+    lng: closest.lng,
+    distanceToUser: Number(closest.distanceMeters),
+    qrToken: closest.qrToken
   }
 }
 

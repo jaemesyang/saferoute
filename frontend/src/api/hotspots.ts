@@ -32,11 +32,10 @@ export async function claimHotspot(id: number, dispatcherName: string): Promise<
   return response.json()
 }
 
-export async function resolveHotspot(id: number, token: string): Promise<boolean> {
+export async function resolveHotspot(id: number, token: string): Promise<void> {
   await apiFetch('/api/hotspots/resolve', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, token })
     })
-  return true
 }

@@ -34,16 +34,3 @@ export function haversineMeters(lat1: number, lng1: number, lat2: number, lng2: 
 
     return R * c * 1000;
 }
-
-export function pickClosest<T extends Coords>(coords: Coords, spots: T[]): { spot: T, meters: number } | null {
-    if (!coords || !Number.isFinite(coords.lat) || !Number.isFinite(coords.lng)) return null
-    if (!Array.isArray(spots) || spots.length === 0) return null
-
-    let best: { spot: T, meters: number } | null = null
-    for (const spot of spots) {
-        const meters = haversineMeters(coords.lat, coords.lng, spot.lat, spot.lng)
-        if (!Number.isFinite(meters)) continue
-        if (best === null || meters < best.meters) best = { spot, meters }
-    }
-    return best
-}

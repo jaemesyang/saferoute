@@ -3,11 +3,7 @@ import QrScanner from 'qr-scanner'
 import { pickup, type PickupResult } from './api/reports'
 import './ScanPickup.css'
 
-export interface PickupTarget {
-  token: string
-}
-
-function parsePickupCode(scanned: string): PickupTarget | null {
+function parsePickupCode(scanned: string): { token: string } | null {
   try {
     const payload = JSON.parse(scanned) as { token?: unknown }
     return typeof payload.token === 'string' && payload.token
@@ -28,7 +24,7 @@ interface ScanPickupProps {
 
 function ScanPickup({ onClose, onResolved }: ScanPickupProps) {
   const [phase, setPhase] = useState<Phase>('idle')
-  const [target, setTarget] = useState<PickupTarget | null>(null)
+  const [target, setTarget] = useState<{ token: string } | null>(null)
   const [failure, setFailure] = useState('')
   const [rejected, setRejected] = useState(false)
   const [pickupStats, setPickupStats] = useState<PickupStats | null>(null)

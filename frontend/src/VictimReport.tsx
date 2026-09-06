@@ -59,7 +59,7 @@ function VictimReport({ onReported, onDispatcherAccess }: VictimReportProps) {
     try {
       setPhase('sending')
       const result = await submitReport(coords.lat, coords.lng)
-      onReported({ assignment: result.assignment, coords })
+      onReported({ assignment: result, coords })
     } catch {
       setError(ERRORS.network)
       setPhase('idle')
