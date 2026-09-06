@@ -1,7 +1,9 @@
 import {Request, Response} from 'express';
 import * as rescueRequestService from './rescueRequest.service.js';
 
-export async function createReport(_req: Request, res: Response) {
-  const report = await rescueRequestService.createReport(res.locals.query);
+export async function createReport(req: Request, res: Response) {
+  const report = await rescueRequestService.createReport(req.body);
   res.json(report);
 }
+
+// export async function arrived()

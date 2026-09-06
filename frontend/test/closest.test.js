@@ -34,11 +34,11 @@ test('submitReport with no API configured still uses the caller position', async
   assert.equal(r.assignment.name, 'Baxter Arena')
 })
 
-test('submitReport calls the closest endpoint and normalises its shape', async () => {
+test('submitReport posts to the reports endpoint and normalises its shape', async () => {
   const calls = []
   const realFetch = globalThis.fetch
-  globalThis.fetch = async (url) => {
-    calls.push(String(url))
+  globalThis.fetch = async (url, options) => {
+    calls.push({ url: String(url), options })
     return {
       ok: true,
       json: async () => ({
@@ -51,9 +51,10 @@ test('submitReport calls the closest endpoint and normalises its shape', async (
     assert.equal(r.isStub, false)
     assert.equal(r.assignment.name, 'Live Hotspot')
     assert.equal(r.assignment.distanceToUser, 812.5)
-    assert.match(calls[0], /\/api\/closest\?/)
-    assert.match(calls[0], /lat=41\.234/)
-    assert.match(calls[0], /lng=-95\.957/)
+    assert.equal(calls[0].url, 'http://api.test/api/reports')
+    assert.equal(calls[0].options.method, 'POST')
+    assert.equal(calls[0].options.headers['Content-Type'], 'application/json')
+    assert.deepEqual(JSON.parse(calls[0].options.body), { lat: 41.234, lng: -95.957 })
   } finally {
     globalThis.fetch = realFetch
   }

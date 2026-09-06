@@ -32,8 +32,11 @@ export async function submitReport(lat, lng, apiUrl) {
   }
 
   try {
-    const query = new URLSearchParams({ lat: String(lat), lng: String(lng) });
-    const response = await fetch(`${baseUrl}/api/reports?${query}`);
+    const response = await fetch(`${baseUrl}/api/reports`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(coords)
+    });
     if (!response.ok) {
       return { assignment: await getStubAssignment(coords), isStub: true };
     }
