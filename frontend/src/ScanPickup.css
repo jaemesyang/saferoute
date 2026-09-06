@@ -103,6 +103,44 @@
   line-height: 1.4;
 }
 
+.scan-progress {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 120px;
+  width: 100%;
+  border-block: 1px solid var(--line-bright);
+}
+
+.scan-progress-primary,
+.scan-progress-remaining {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px 0;
+}
+
+.scan-progress-primary strong,
+.scan-progress-remaining strong {
+  font: 400 34px/1 var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.scan-progress-primary span,
+.scan-progress-remaining span {
+  color: var(--dim);
+  font: 500 11px/1.3 var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.scan-progress-remaining {
+  padding-left: 18px;
+  border-left: 1px solid var(--line);
+}
+
+.scan-progress-remaining strong {
+  color: var(--ok);
+}
+
 .scan-ref {
   display: flex;
   align-items: center;

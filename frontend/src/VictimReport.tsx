@@ -50,9 +50,8 @@ function VictimReport({ onReported, onDispatcherAccess }: VictimReportProps) {
     try {
       setPhase('locating')
       coords = await requestLocation()
-    } catch (err) {
-      const locationError = err as { code?: number, message?: string } | null | undefined
-      setError(locationError?.code === 1 ? ERRORS.permission : locationError?.message || ERRORS.permission)
+    } catch {
+      setError(ERRORS.permission)
       setPhase('idle')
       return
     }

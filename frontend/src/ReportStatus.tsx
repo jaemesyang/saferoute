@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { fetchHotspots } from './api/hotspots'
-import { checkIn, type Assignment } from './api/reports'
+import { checkIn, fetchReportStatus, type Assignment } from './api/reports'
 import { usePolling } from './hooks/usePolling'
 import { haversineMeters, requestLocation, type Coords } from './utils/geo'
 import QRCodeGenerator from './QRCodeGenerator'
@@ -35,6 +35,7 @@ function ReportStatus({ assignment, coords }: ReportStatusProps) {
   const [isStale, setIsStale] = useState(false)
   const [counts, setCounts] = useState<{ assigned: number, arrived: number } | null>(null)
   const [isResolved, setIsResolved] = useState(false)
+  const [isPickedUp, setIsPickedUp] = useState(false)
   const [lastPoll, setLastPoll] = useState<Date | null>(null)
   const [checkInPhase, setCheckInPhase] = useState<'idle' | 'sending' | 'done'>('idle')
   const [checkInError, setCheckInError] = useState(false)
@@ -42,7 +43,16 @@ function ReportStatus({ assignment, coords }: ReportStatusProps) {
   const hasSeenAssignment = useRef(false)
 
   const refresh = useCallback(async () => {
-    if (isResolved) return
+    if (isResolved || isPickedUp) return
+
+    try {
+      if (await fetchReportStatus(assignment.qrToken) === 'pickedup') {
+        setIsPickedUp(true)
+        setLastPoll(new Date())
+        return
+      }
+    } catch {
+    }
 
     try {
       const position = await requestLocation()
@@ -67,14 +77,14 @@ function ReportStatus({ assignment, coords }: ReportStatusProps) {
     }
 
     setLastPoll(new Date())
-  }, [assignment, isResolved])
+  }, [assignment, isPickedUp, isResolved])
 
   useEffect(() => {
     refresh()
   }, [refresh])
 
 
-  usePolling(refresh, isResolved ? 0 : POLL_INTERVAL_MS)
+  usePolling(refresh, isResolved || isPickedUp ? 0 : POLL_INTERVAL_MS)
 
   async function handleCheckIn() {
     setCheckInError(false)
@@ -111,7 +121,7 @@ function ReportStatus({ assignment, coords }: ReportStatusProps) {
           )}
         </section>
 
-        {checkInPhase === 'done' && (
+        {checkInPhase === 'done' && !isPickedUp && (
           <section className="status-qr" aria-label="Pickup QR code">
             <span className="label">Pickup code</span>
             <div className="status-qr-code">
@@ -121,7 +131,17 @@ function ReportStatus({ assignment, coords }: ReportStatusProps) {
           </section>
         )}
 
-        {checkInPhase === 'done' ? (
+        {isPickedUp ? (
+          <section className="status-panel is-done" role="status">
+            <span className="pill is-ok">
+              <span className="dot" />
+              Pickup confirmed
+            </span>
+            <p className="status-panel-text">
+              A dispatcher confirmed your pickup. You're all set and no further action is needed.
+            </p>
+          </section>
+        ) : checkInPhase === 'done' ? (
           <section className="status-panel is-done" role="status">
             <span className="pill is-ok">
               <span className="dot" />

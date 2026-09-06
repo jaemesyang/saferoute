@@ -105,16 +105,13 @@ function Dashboard({ dispatcherName, onSignOut }: DashboardProps) {
     await load()
   }
 
-  async function handleScanResolved(id: number): Promise<void> {
-    setIsScanning(false)
-    setResolvedIds((prev) => (prev.includes(id) ? prev : [...prev, id]))
+  async function handleScanResolved(): Promise<void> {
     await load()
   }
 
   if (isScanning) {
     return (
       <ScanPickup
-        hotspots={hotspots}
         onClose={() => setIsScanning(false)}
         onResolved={handleScanResolved}
       />

@@ -1,7 +1,7 @@
 import {db} from "../../db/index.js";
 import {hotspots, rescueRequests} from "../../db/schema.js";
 import {ArrivedInput, CreateReportInput, PickupInput} from "./rescueRequest.schema.js";
-import {and, count, eq, isNotNull, ne, sql} from 'drizzle-orm';
+import {and, count, eq, isNotNull, sql} from 'drizzle-orm';
 import {ClosestHotspot, PickupResult, ReportAssignment} from './rescueRequest.types.js';
 
 async function getClosest(input: CreateReportInput): Promise<ClosestHotspot | null> {
@@ -105,6 +105,16 @@ export async function arrived(input: ArrivedInput) {
   })
 }
 
+export async function getStatus(token: string) {
+  const [request] = await db
+    .select({status: rescueRequests.status})
+    .from(rescueRequests)
+    .where(eq(rescueRequests.qrToken, token))
+    .limit(1);
+
+  return request ?? null;
+}
+
 
 export async function pickup(input: PickupInput): Promise<PickupResult> {
   return db.transaction(async (tx) => {
@@ -116,7 +126,7 @@ export async function pickup(input: PickupInput): Promise<PickupResult> {
       .where(
         and(
           eq(rescueRequests.qrToken, input.token),
-          ne(rescueRequests.status, 'pickedup'),
+          eq(rescueRequests.status, 'arrived'),
         ),
       )
       .returning({
@@ -139,7 +149,7 @@ export async function pickup(input: PickupInput): Promise<PickupResult> {
         .where(eq(rescueRequests.qrToken, input.token))
         .limit(1);
 
-      if (!existing) {
+      if (!existing || existing.status !== 'pickedup') {
         return {
           status: 'invalid',
         };
@@ -152,6 +162,13 @@ export async function pickup(input: PickupInput): Promise<PickupResult> {
 
     if (hotspotId === null) {
       throw new Error('Rescue request is not assigned to a hotspot');
+    }
+
+    if (pickupStatus === 'pickedup') {
+      await tx
+        .update(hotspots)
+        .set({arrived: sql`greatest(${hotspots.arrived} - 1, 0)`})
+        .where(eq(hotspots.id, hotspotId));
     }
 
     const [stats] = await tx

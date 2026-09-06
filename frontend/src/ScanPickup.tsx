@@ -1,53 +1,43 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import QrScanner from 'qr-scanner'
-import { resolveHotspot, type Hotspot } from './api/hotspots'
+import { pickup, type PickupResult } from './api/reports'
 import './ScanPickup.css'
 
-const PICKUP_ID_PARAM = 'resolve'
-const PICKUP_TOKEN_PARAM = 'token'
-
 export interface PickupTarget {
-  id: number
   token: string
 }
 
 function parsePickupCode(scanned: string): PickupTarget | null {
-  let url: URL
-
   try {
-    url = new URL(scanned)
+    const payload = JSON.parse(scanned) as { token?: unknown }
+    return typeof payload.token === 'string' && payload.token
+      ? { token: payload.token }
+      : null
   } catch {
     return null
   }
-
-  const rawId = url.searchParams.get(PICKUP_ID_PARAM)
-  const token = url.searchParams.get(PICKUP_TOKEN_PARAM)
-
-  if (!rawId || !token) return null
-
-  const id = Number(rawId)
-  if (!Number.isInteger(id)) return null
-
-  return { id, token }
 }
 
 type Phase = 'idle' | 'scanning' | 'review' | 'sending' | 'done' | 'error'
+type PickupStats = Exclude<PickupResult, { status: 'invalid' }>
 
 interface ScanPickupProps {
-  hotspots: Hotspot[]
   onClose: () => void
-  onResolved: (id: number) => void
+  onResolved: () => void
 }
 
-function ScanPickup({ hotspots, onClose, onResolved }: ScanPickupProps) {
+function ScanPickup({ onClose, onResolved }: ScanPickupProps) {
   const [phase, setPhase] = useState<Phase>('idle')
   const [target, setTarget] = useState<PickupTarget | null>(null)
   const [failure, setFailure] = useState('')
   const [rejected, setRejected] = useState(false)
+  const [pickupStats, setPickupStats] = useState<PickupStats | null>(null)
 
   const videoRef = useRef<HTMLVideoElement>(null)
   const scannerRef = useRef<QrScanner | null>(null)
   const phaseRef = useRef<Phase>('idle')
+  const cameraWantedRef = useRef(true)
+  const ensureCameraRef = useRef<() => void>(() => {})
 
   const enterPhase = useCallback((next: Phase) => {
     phaseRef.current = next
@@ -67,6 +57,7 @@ function ScanPickup({ hotspots, onClose, onResolved }: ScanPickupProps) {
       }
 
       setRejected(false)
+      cameraWantedRef.current = false
       setTarget(parsed)
       enterPhase('review')
 
@@ -81,7 +72,7 @@ function ScanPickup({ hotspots, onClose, onResolved }: ScanPickupProps) {
 
 
     let cancelled = false
-
+    let starting = false
     const scanner = new QrScanner(video, (result) => handleDecode(result.data), {
       returnDetailedScanResult: true,
       preferredCamera: 'environment',
@@ -93,32 +84,51 @@ function ScanPickup({ hotspots, onClose, onResolved }: ScanPickupProps) {
 
     scannerRef.current = scanner
 
-    scanner
-      .start()
-      .then(() => {
-        if (cancelled) return
+    async function ensureCameraStream(): Promise<void> {
+      const stream = video.srcObject
+      const hasLiveStream =
+        stream instanceof MediaStream &&
+        stream.getVideoTracks().some((track) => track.readyState === 'live')
+
+      if (cancelled || !cameraWantedRef.current || starting || hasLiveStream) return
+
+      starting = true
+      try {
+        await scanner.start()
+        if (cancelled || !cameraWantedRef.current) return
+        setFailure('')
         enterPhase('scanning')
-      })
-      .catch(() => {
-        if (cancelled) return
+      } catch {
+        if (cancelled || !cameraWantedRef.current) return
         setFailure('Camera unavailable. Check camera permission and try again.')
         enterPhase('error')
-      })
+      } finally {
+        starting = false
+      }
+    }
+
+    ensureCameraRef.current = () => void ensureCameraStream()
+    void ensureCameraStream()
+    const streamCheck = window.setInterval(() => void ensureCameraStream(), 1000)
 
     return () => {
       cancelled = true
+      window.clearInterval(streamCheck)
       scanner.stop()
       scanner.destroy()
       scannerRef.current = null
+      ensureCameraRef.current = () => {}
     }
   }, [handleDecode, enterPhase])
 
   function resumeScanning(): void {
+    cameraWantedRef.current = true
     setTarget(null)
+    setPickupStats(null)
     setFailure('')
     setRejected(false)
-    enterPhase('scanning')
-    void scannerRef.current?.start()
+    enterPhase('idle')
+    ensureCameraRef.current()
   }
 
   async function handleConfirm(): Promise<void> {
@@ -127,11 +137,13 @@ function ScanPickup({ hotspots, onClose, onResolved }: ScanPickupProps) {
     enterPhase('sending')
 
     try {
-      if (!await resolveHotspot(target.id, target.token)) {
-        setFailure('Pickup could not be cleared. Check the connection and try again.')
+      const result = await pickup(target.token)
+      if (result.status === 'invalid') {
+        setFailure('This pickup code is no longer valid. Ask the user to show the current code.')
         enterPhase('error')
         return
       }
+      setPickupStats(result)
     } catch {
       setFailure('Pickup could not be cleared. Check the connection and try again.')
       enterPhase('error')
@@ -139,12 +151,8 @@ function ScanPickup({ hotspots, onClose, onResolved }: ScanPickupProps) {
     }
 
     enterPhase('done')
-    onResolved(target.id)
+    onResolved()
   }
-
-  const scannedSpot = target
-    ? hotspots.find((spot) => spot.id === target.id) ?? null
-    : null
 
   return (
     <div className="scan">
@@ -177,18 +185,6 @@ function ScanPickup({ hotspots, onClose, onResolved }: ScanPickupProps) {
       {phase === 'review' && target && (
         <section className="scan-panel" role="alert">
           <span className="label">Confirm pickup</span>
-          <p className="scan-place">{scannedSpot?.name ?? 'Location not in your list'}</p>
-          {!scannedSpot && (
-            <p className="scan-hint">
-              This code isn't for a hotspot you have open. It may already be
-              cleared, or claimed by another dispatcher — dispatch decides either
-              way.
-            </p>
-          )}
-          <p className="scan-ref">
-            <span className="label">Reference</span>
-            <code>{target.id}</code>
-          </p>
           <p className="scan-hint">
             Confirming clears this location for dispatch and cannot be undone.
           </p>
@@ -217,13 +213,40 @@ function ScanPickup({ hotspots, onClose, onResolved }: ScanPickupProps) {
         </section>
       )}
 
-      {phase === 'done' && (
+      {phase === 'done' && pickupStats && (
         <section className="scan-panel is-done" role="status">
           <span className="pill is-ok">
             <span className="dot" />
-            Cleared
+            {pickupStats.status === 'already_pickedup' ? 'Already cleared' : 'Cleared'}
           </span>
-          <p className="scan-hint">Pickup confirmed.</p>
+          <div
+            className="scan-progress"
+            aria-label={`${pickupStats.pickedUp} of ${pickupStats.total} pickups complete`}
+          >
+            <div className="scan-progress-primary">
+              <strong>{pickupStats.pickedUp}</strong>
+              <span>of {pickupStats.total} picked up</span>
+            </div>
+            <div className="scan-progress-remaining">
+              <strong>{pickupStats.remaining}</strong>
+              <span>Remaining</span>
+            </div>
+          </div>
+          <p className="scan-hint">
+            {pickupStats.allPickedUp
+              ? 'All pickups at this location are complete.'
+              : `${pickupStats.remaining} ${pickupStats.remaining === 1 ? 'pickup remains' : 'pickups remain'} at this location.`}
+          </p>
+          <div className="scan-actions">
+            {!pickupStats.allPickedUp && (
+              <button className="btn btn-primary" type="button" onClick={resumeScanning}>
+                Scan another
+              </button>
+            )}
+            <button className="btn" type="button" onClick={onClose}>
+              Back to dispatch
+            </button>
+          </div>
         </section>
       )}
 
