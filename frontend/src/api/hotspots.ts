@@ -1,3 +1,5 @@
+import { apiUrl } from './base'
+
 export interface Hotspot {
   id: number
   name: string
@@ -25,14 +27,14 @@ export const PREDETERMINED_HOTSPOTS: { id: number, name: string, lat: number, ln
 ].map((loc, i) => ({ ...loc, id: -(i + 1) }))
 
 export async function fetchHotspots(): Promise<HotspotsResult> {
-  const baseUrl = import.meta.env?.VITE_API_URL;
+  const url = apiUrl('/api/hotspots');
 
-  if (!baseUrl) {
+  if (!url) {
     return { hotspots: await getStubHotspots(), isStub: true };
   }
 
   try {
-    const response = await fetch(`${baseUrl}/api/hotspots`);
+    const response = await fetch(url);
     if (!response.ok) {
       return { hotspots: await getStubHotspots(), isStub: true };
     }
@@ -48,14 +50,14 @@ export interface ClaimResult {
 }
 
 export async function claimHotspot(id: number, dispatcherName: string): Promise<ClaimResult | null> {
-  const baseUrl = import.meta.env?.VITE_API_URL;
+  const url = apiUrl('/api/hotspots/claim');
 
-  if (!baseUrl) {
+  if (!url) {
     return null;
   }
 
   try {
-    const response = await fetch(`${baseUrl}/api/hotspots/claim`, {
+    const response = await fetch(url, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, dispatcherName })
@@ -70,14 +72,14 @@ export async function claimHotspot(id: number, dispatcherName: string): Promise<
 }
 
 export async function resolveHotspot(id: number, token: string): Promise<boolean> {
-  const baseUrl = import.meta.env?.VITE_API_URL;
+  const url = apiUrl('/api/hotspots/resolve');
 
-  if (!baseUrl || !token) {
+  if (!url || !token) {
     return false;
   }
 
   try {
-    const response = await fetch(`${baseUrl}/api/hotspots/resolve`, {
+    const response = await fetch(url, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, token })

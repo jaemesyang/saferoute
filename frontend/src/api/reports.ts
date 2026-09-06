@@ -1,3 +1,4 @@
+import { apiUrl } from './base'
 import { PREDETERMINED_HOTSPOTS } from './hotspots'
 import { pickClosest, type Coords } from '../utils/geo'
 
@@ -17,14 +18,14 @@ export interface ReportResult {
 
 export async function submitReport(lat: number, lng: number): Promise<ReportResult> {
   const coords = { lat, lng };
-  const baseUrl = import.meta.env?.VITE_API_URL;
+  const url = apiUrl('/api/reports');
 
-  if (!baseUrl) {
+  if (!url) {
     return { assignment: await getStubAssignment(coords), isStub: true };
   }
 
   try {
-    const response = await fetch(`${baseUrl}/api/reports`, {
+    const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(coords)
@@ -62,12 +63,12 @@ export interface CheckInResult {
 }
 
 export async function checkIn(assignmentId: number): Promise<CheckInResult> {
-  const baseUrl = import.meta.env?.VITE_API_URL;
-  if (!baseUrl) {
+  const url = apiUrl('/api/reports/arrived');
+  if (!url) {
     return {confirmed: false, isStub: true};
   }
   try {
-    const response = await fetch(`${baseUrl}/api/reports/arrived`, {
+    const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({id: assignmentId})
