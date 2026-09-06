@@ -1,6 +1,6 @@
-import test from 'node:test'
+import { test } from 'vitest'
 import assert from 'node:assert/strict'
-import { claimHotspot, resolveHotspot } from '../src/api/hotspots.js'
+import { claimHotspot, resolveHotspot } from '../src/api/hotspots'
 
 /**
  * Swap in a fake fetch, run `body`, and hand back every call it made.

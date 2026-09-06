@@ -1,8 +1,9 @@
-/**
+export interface Coords {
+    lat: number
+    lng: number
+}
 
- * @returns {Promise<{ lat: number, lng: number }>}
- */
-export function requestLocation() {
+export function requestLocation(): Promise<Coords> {
     if (!navigator.geolocation) {
         return Promise.reject(new Error('Geolocation not supported'))
     }
@@ -15,20 +16,10 @@ export function requestLocation() {
     })
 }
 
-/**
-
- *
- * @param {number} lat1
- * @param {number} lng1
- * @param {number} lat2
- * @param {number} lng2
- * @returns {number} 
- */
-
-export function haversineMeters(lat1, lng1, lat2, lng2) {
+export function haversineMeters(lat1: number, lng1: number, lat2: number, lng2: number): number {
     const R = 6371.0;
 
-    const toRadians = (degree) => (degree * Math.PI) / 180;
+    const toRadians = (degree: number) => (degree * Math.PI) / 180;
 
     const rLat1 = toRadians(lat1);
     const rLat2 = toRadians(lat2);
@@ -44,18 +35,11 @@ export function haversineMeters(lat1, lng1, lat2, lng2) {
     return R * c * 1000;
 }
 
-/**
- *
- * @template {{ lat: number, lng: number }} T
- * @param {{ lat: number, lng: number }} coords
- * @param {T[]} spots
- * @returns {{ spot: T, meters: number } | null}
- */
-export function pickClosest(coords, spots) {
+export function pickClosest<T extends Coords>(coords: Coords, spots: T[]): { spot: T, meters: number } | null {
     if (!coords || !Number.isFinite(coords.lat) || !Number.isFinite(coords.lng)) return null
     if (!Array.isArray(spots) || spots.length === 0) return null
 
-    let best = null
+    let best: { spot: T, meters: number } | null = null
     for (const spot of spots) {
         const meters = haversineMeters(coords.lat, coords.lng, spot.lat, spot.lng)
         if (!Number.isFinite(meters)) continue

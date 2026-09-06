@@ -6,9 +6,11 @@ import {
   TileLayer,
   useMap,
 } from 'react-leaflet'
+import type { LatLngTuple } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
+import type { Hotspot } from './api/hotspots'
 
-const FALLBACK_CENTER = [41.2565, -95.9345]
+const FALLBACK_CENTER: LatLngTuple = [41.2565, -95.9345]
 const FALLBACK_ZOOM = 12
 
 const SEVERITY_COLOR = {
@@ -17,12 +19,12 @@ const SEVERITY_COLOR = {
   low: '#4aa8ff',
 }
 
-function radiusFor(total, maxTotal) {
+function radiusFor(total: number, maxTotal: number) {
   const share = maxTotal > 0 ? total / maxTotal : 0
   return 7 + 15 * Math.sqrt(share)
 }
 
-function FitToHotspots({ hotspots }) {
+function FitToHotspots({ hotspots }: { hotspots: Hotspot[] }) {
   const map = useMap()
   const hasFit = useRef(false)
 
@@ -30,7 +32,7 @@ function FitToHotspots({ hotspots }) {
     if (hasFit.current || hotspots.length === 0) return
     hasFit.current = true
     map.fitBounds(
-      hotspots.map((spot) => [spot.lat, spot.lng]),
+      hotspots.map((spot): LatLngTuple => [spot.lat, spot.lng]),
       { padding: [48, 48], maxZoom: 14 },
     )
   }, [hotspots, map])
@@ -38,14 +40,13 @@ function FitToHotspots({ hotspots }) {
   return null
 }
 
-/**
- *
- * @param {Object} props
- * @param {import('./api/hotspots.js').Hotspot[]} props.hotspots
- * @param {string} props.dispatcherName
- * @param {(id: string) => void} props.onClaim
- */
-function HotspotMap({ hotspots, dispatcherName, onClaim }) {
+interface HotspotMapProps {
+  hotspots: Hotspot[]
+  dispatcherName: string
+  onClaim: (id: string) => void
+}
+
+function HotspotMap({ hotspots, dispatcherName, onClaim }: HotspotMapProps) {
   const maxTotal = hotspots.reduce(
     (max, spot) => Math.max(max, spot.assigned + spot.arrived),
     0,

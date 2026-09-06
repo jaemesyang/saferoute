@@ -1,24 +1,19 @@
-/**
- * @typedef {Object} Hotspot
- * @property {string} id
- * @property {string} name
- * @property {number} lat
- * @property {number} lng
- * @property {number} assigned
- * @property {number} arrived
- * @property {string | null} claimedBy
- */
+export interface Hotspot {
+  id: string
+  name: string
+  lat: number
+  lng: number
+  assigned: number
+  arrived: number
+  claimedBy: string | null
+}
 
-/**
- * @typedef {Object} HotspotsResult
- * @property {Hotspot[]} hotspots
- * @property {boolean} isStub
- */
+export interface HotspotsResult {
+  hotspots: Hotspot[]
+  isStub: boolean
+}
 
-/**
- * @type {{ id: string, name: string, lat: number, lng: number }[]}
- */
-export const PREDETERMINED_HOTSPOTS = [
+export const PREDETERMINED_HOTSPOTS: { id: string, name: string, lat: number, lng: number }[] = [
   { name: 'Lincoln High School', lat: 40.8066, lng: -96.688649 },
   { name: 'Miller Middle School', lat: 41.2698, lng: -95.9745 },
   { name: 'Kennedy High School', lat: 41.2958, lng: -96.0313 },
@@ -29,10 +24,7 @@ export const PREDETERMINED_HOTSPOTS = [
   { name: 'Baxter Arena', lat: 41.2336, lng: -95.9569 }
 ].map((loc, i) => ({ ...loc, id: `stub-${i}` }))
 
-/**
- * @returns {Promise<HotspotsResult>}
- */
-export async function fetchHotspots() {
+export async function fetchHotspots(): Promise<HotspotsResult> {
   const baseUrl = import.meta.env?.VITE_API_URL;
 
   if (!baseUrl) {
@@ -50,8 +42,12 @@ export async function fetchHotspots() {
   }
 }
 
-/** @returns {Promise<{ claimedBy: string, resolveToken: string } | null>} */
-export async function claimHotspot(id, dispatcherName, apiUrl) {
+export interface ClaimResult {
+  claimedBy: string
+  resolveToken: string
+}
+
+export async function claimHotspot(id: string, dispatcherName: string, apiUrl?: string): Promise<ClaimResult | null> {
   const baseUrl = apiUrl ?? import.meta.env?.VITE_API_URL;
 
   if (!baseUrl) {
@@ -73,8 +69,7 @@ export async function claimHotspot(id, dispatcherName, apiUrl) {
   }
 }
 
-/** @returns {Promise<boolean>} */
-export async function resolveHotspot(id, token, apiUrl) {
+export async function resolveHotspot(id: string, token: string, apiUrl?: string): Promise<boolean> {
   const baseUrl = apiUrl ?? import.meta.env?.VITE_API_URL;
 
   if (!baseUrl || !token) {
@@ -94,22 +89,13 @@ export async function resolveHotspot(id, token, apiUrl) {
   }
 }
 
-/**
- * @type {Map<string, string>}
- */
-const STUB_CLAIMS = new Map(
+const STUB_CLAIMS = new Map<string, string>(
   PREDETERMINED_HOTSPOTS.filter((_, i) => i % 4 === 0).map(loc => [loc.id, 'dispatchera'])
 );
 
-/**
- * @type {Map<string, { assigned: number, arrived: number }> | null}
- */
-let stubCounts = null;
+let stubCounts: Map<string, { assigned: number, arrived: number }> | null = null;
 
-/**
- * @returns {Map<string, { assigned: number, arrived: number }>}
- */
-function driftStubCounts() {
+function driftStubCounts(): Map<string, { assigned: number, arrived: number }> {
   if (!stubCounts) {
     stubCounts = new Map(
       PREDETERMINED_HOTSPOTS.map(loc => {
@@ -130,10 +116,7 @@ function driftStubCounts() {
   return stubCounts;
 }
 
-/**
- * @returns {Promise<Hotspot[]>}
- */
-export async function getStubHotspots() {
+export async function getStubHotspots(): Promise<Hotspot[]> {
   await new Promise(resolve => setTimeout(resolve, 500));
 
   const counts = driftStubCounts();

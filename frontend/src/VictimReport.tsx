@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { submitReport } from './api/reports.js'
-import { requestLocation } from './utils/geo.js'
+import { submitReport, type Assignment } from './api/reports'
+import { requestLocation, type Coords } from './utils/geo'
 import './VictimReport.css'
 
 const ERRORS = {
@@ -12,13 +12,19 @@ const ERRORS = {
     "We couldn't send your location. Check your signal and try again."
 }
 
-/**
- * @param {Object} props
- * @param {(result: { assignment: import('./api/reports.js').Assignment, coords: { lat: number, lng: number }, isStub: boolean }) => void} props.onReported
- * @param {() => void} props.onDispatcherAccess
- */
-function VictimReport({ onReported, onDispatcherAccess }) {
-  const [phase, setPhase] = useState('idle')
+export interface ReportedResult {
+  assignment: Assignment
+  coords: Coords
+  isStub: boolean
+}
+
+interface VictimReportProps {
+  onReported: (result: ReportedResult) => void
+  onDispatcherAccess: () => void
+}
+
+function VictimReport({ onReported, onDispatcherAccess }: VictimReportProps) {
+  const [phase, setPhase] = useState<'idle' | 'locating' | 'sending'>('idle')
   const [error, setError] = useState('')
 
   const isBusy = phase === 'locating' || phase === 'sending'
@@ -32,12 +38,17 @@ function VictimReport({ onReported, onDispatcherAccess }) {
       return
     }
 
-    let coords
+    let coords: Coords
     try {
       setPhase('locating')
       coords = await requestLocation()
     } catch (err) {
-      setError(err?.code === 1 ? ERRORS.permission : err?.message || ERRORS.permission)
+      // requestLocation rejects with either a GeolocationPositionError (code 1
+      // is "permission denied") or a plain Error when geolocation is missing.
+      // Narrowing `unknown` properly would mean adding runtime checks, so this
+      // is a cast over the two shapes that actually arrive here.
+      const locationError = err as { code?: number, message?: string } | null | undefined
+      setError(locationError?.code === 1 ? ERRORS.permission : locationError?.message || ERRORS.permission)
       setPhase('idle')
       return
     }
