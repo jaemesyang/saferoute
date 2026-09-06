@@ -183,8 +183,8 @@ function ScanPickup({ hotspots, onClose, onResolved }: ScanPickupProps) {
       })
 
     return () => {
-      cancelled = true.
-        scanner.stop()
+      cancelled = true
+      scanner.stop()
       scanner.destroy()
       scannerRef.current = null
     }
