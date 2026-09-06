@@ -3,5 +3,6 @@ export type Hotspot = {
   name: string,
   lat: number,
   lng: number,
-  headcount: number
+  assigned: number
+  arrived: number
 }

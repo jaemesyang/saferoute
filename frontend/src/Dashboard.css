@@ -76,7 +76,7 @@
 
 .dash-stats {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   border-bottom: 1px solid var(--line-bright);
   background: var(--panel);
 }
@@ -115,7 +115,7 @@
 
 .row {
   display: grid;
-  grid-template-columns: 3px 1fr 90px 210px;
+  grid-template-columns: 3px 1fr 120px 120px 250px;
   align-items: center;
   gap: 14px;
   padding: 0 18px 0 0;
@@ -163,13 +163,15 @@
   padding-left: 0;
 }
 
-.col-count {
+.col-assigned,
+.col-arrived {
   font: 400 16px/1 var(--mono);
   font-variant-numeric: tabular-nums;
   text-align: right;
 }
 
-.row-head .col-count {
+.row-head .col-assigned,
+.row-head .col-arrived {
   text-align: right;
 }
 
@@ -209,33 +211,12 @@
     justify-content: space-between;
   }
 
+  .dash-list {
+    overflow-x: auto;
+  }
+
   .row {
-    grid-template-columns: 3px 1fr 60px;
-    grid-template-areas: 'sev name count' '. action action';
-    padding: 8px 14px 8px 0;
-    gap: 8px 12px;
-  }
-
-  .col-sev {
-    grid-area: sev;
-  }
-
-  .col-name {
-    grid-area: name;
-    white-space: normal;
-  }
-
-  .col-count {
-    grid-area: count;
-  }
-
-  .col-action {
-    grid-area: action;
-    justify-content: flex-start;
-  }
-
-  .row-head .col-action {
-    display: none;
+    min-width: 760px;
   }
 }
 

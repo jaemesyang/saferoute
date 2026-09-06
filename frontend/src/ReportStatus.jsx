@@ -44,7 +44,7 @@ function ReportStatus({ assignment, coords, isStub }) {
     return Number.isFinite(meters) ? { meters, at: new Date() } : null
   })
   const [isStale, setIsStale] = useState(false)
-  const [headcount, setHeadcount] = useState(null)
+  const [counts, setCounts] = useState(null)
   const [isResolved, setIsResolved] = useState(false)
   const [lastPoll, setLastPoll] = useState(null)
   const [checkInPhase, setCheckInPhase] = useState('idle')
@@ -69,7 +69,7 @@ function ReportStatus({ assignment, coords, isStub }) {
       const match = result.hotspots.find((spot) => spot.id === assignment.id)
       if (match) {
         hasSeenAssignment.current = true
-        setHeadcount(match.headcount)
+        setCounts({ assigned: match.assigned, arrived: match.arrived })
       } else if (hasSeenAssignment.current) {
         setIsResolved(true)
       }
@@ -107,9 +107,9 @@ function ReportStatus({ assignment, coords, isStub }) {
 
         <section className="status-place">
           <h1 className="status-name">{assignment.name}</h1>
-          {headcount !== null && (
-            <p className="status-headcount">
-              <strong>{headcount}</strong> {headcount === 1 ? 'person' : 'people'} waiting here now
+          {counts !== null && (
+            <p className="status-counts">
+              <strong>{counts.assigned}</strong> assigned · <strong>{counts.arrived}</strong> arrived
             </p>
           )}
         </section>
@@ -174,7 +174,7 @@ function ReportStatus({ assignment, coords, isStub }) {
               <span className="dot" />
               Demo data
             </span>
-            Headcount and location aren't live.
+            Assignment and arrival data aren't live.
           </p>
         )}
       </div>

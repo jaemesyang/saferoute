@@ -13,7 +13,8 @@ export async function getHotspots() {
       name: hotspot.name,
       lat: hotspot.location.y,
       lng: hotspot.location.x,
-      headcount: hotspot.headcount
+      assigned: hotspot.assigned,
+      arrived: hotspot.arrived,
     }
   });
   return formattedHotspots;

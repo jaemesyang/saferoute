@@ -7,9 +7,9 @@ import './Dashboard.css'
 
 const REFRESH_INTERVAL_MS = 15000
 
-function severityOf(headcount) {
-  if (headcount >= 40) return 'high'
-  if (headcount >= 20) return 'med'
+function severityOf(assigned) {
+  if (assigned >= 40) return 'high'
+  if (assigned >= 20) return 'med'
   return 'low'
 }
 
@@ -55,14 +55,15 @@ function Dashboard({ dispatcherName, onSignOut }) {
   )
 
   const sorted = useMemo(
-    () => [...hotspots].sort((a, b) => b.headcount - a.headcount),
+    () => [...hotspots].sort((a, b) => b.assigned - a.assigned),
     [hotspots],
   )
 
   const stats = useMemo(
     () => ({
       locations: hotspots.length,
-      waiting: hotspots.reduce((total, spot) => total + spot.headcount, 0),
+      assigned: hotspots.reduce((total, spot) => total + spot.assigned, 0),
+      arrived: hotspots.reduce((total, spot) => total + spot.arrived, 0),
       unclaimed: hotspots.filter((spot) => !spot.claimedBy).length,
     }),
     [hotspots],
@@ -138,7 +139,7 @@ function Dashboard({ dispatcherName, onSignOut }) {
             <span className="dot" />
             Backend unavailable
           </span>
-          <span>Showing demo data — headcounts and claims are not live.</span>
+          <span>Showing demo data — assignments, arrivals, and claims are not live.</span>
         </div>
       )}
 
@@ -148,8 +149,12 @@ function Dashboard({ dispatcherName, onSignOut }) {
           <span className="stat-value">{hasLoaded ? stats.locations : '--'}</span>
         </div>
         <div className="stat">
-          <span className="label">People waiting</span>
-          <span className="stat-value">{hasLoaded ? stats.waiting : '--'}</span>
+          <span className="label">Assigned</span>
+          <span className="stat-value">{hasLoaded ? stats.assigned : '--'}</span>
+        </div>
+        <div className="stat">
+          <span className="label">Arrived</span>
+          <span className="stat-value">{hasLoaded ? stats.arrived : '--'}</span>
         </div>
         <div className="stat">
           <span className="label">Unclaimed</span>
@@ -172,7 +177,8 @@ function Dashboard({ dispatcherName, onSignOut }) {
           <div className="row row-head">
             <span className="col-sev" />
             <span className="label col-name">Location</span>
-            <span className="label col-count">Waiting</span>
+            <span className="label col-assigned">Assigned</span>
+            <span className="label col-arrived">Arrived</span>
             <span className="label col-action">Status</span>
           </div>
 
@@ -184,9 +190,10 @@ function Dashboard({ dispatcherName, onSignOut }) {
 
           {sorted.map((spot) => (
             <div className="row" key={spot.id}>
-              <span className={`col-sev sev-${severityOf(spot.headcount)}`} />
+              <span className={`col-sev sev-${severityOf(spot.assigned)}`} />
               <span className="col-name">{spot.name}</span>
-              <span className="col-count">{spot.headcount}</span>
+              <span className="col-assigned">{spot.assigned}</span>
+              <span className="col-arrived">{spot.arrived}</span>
               <span className="col-action">
                 {spot.claimedBy ? (
                   <>

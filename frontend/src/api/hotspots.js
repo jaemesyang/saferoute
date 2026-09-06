@@ -4,7 +4,8 @@
  * @property {string} name
  * @property {number} lat
  * @property {number} lng
- * @property {number} headcount
+ * @property {number} assigned
+ * @property {number} arrived
  * @property {string | null} claimedBy
  */
 
@@ -57,25 +58,32 @@ const STUB_CLAIMS = new Map(
 );
 
 /**
- * @type {Map<string, number> | null}
+ * @type {Map<string, { assigned: number, arrived: number }> | null}
  */
-let stubHeadcounts = null;
+let stubCounts = null;
 
 /**
- * @returns {Map<string, number>}
+ * @returns {Map<string, { assigned: number, arrived: number }>}
  */
-function driftStubHeadcounts() {
-  if (!stubHeadcounts) {
-    stubHeadcounts = new Map(
-      PREDETERMINED_HOTSPOTS.map(loc => [loc.id, Math.floor(Math.random() * 60) + 1])
+function driftStubCounts() {
+  if (!stubCounts) {
+    stubCounts = new Map(
+      PREDETERMINED_HOTSPOTS.map(loc => {
+        const assigned = Math.floor(Math.random() * 60) + 1
+        return [loc.id, { assigned, arrived: Math.floor(Math.random() * (assigned + 1)) }]
+      })
     );
-    return stubHeadcounts;
+    return stubCounts;
   }
 
-  for (const [id, count] of stubHeadcounts) {
-    stubHeadcounts.set(id, Math.max(1, count + Math.floor(Math.random() * 7) - 3));
+  for (const [id, counts] of stubCounts) {
+    const assigned = Math.max(1, counts.assigned + Math.floor(Math.random() * 7) - 3)
+    stubCounts.set(id, {
+      assigned,
+      arrived: Math.min(assigned, Math.max(0, counts.arrived + Math.floor(Math.random() * 5) - 2)),
+    })
   }
-  return stubHeadcounts;
+  return stubCounts;
 }
 
 /**
@@ -84,11 +92,11 @@ function driftStubHeadcounts() {
 export async function getStubHotspots() {
   await new Promise(resolve => setTimeout(resolve, 500));
 
-  const headcounts = driftStubHeadcounts();
+  const counts = driftStubCounts();
 
   return PREDETERMINED_HOTSPOTS.map(loc => ({
     ...loc,
-    headcount: headcounts.get(loc.id) ?? 1,
+    ...(counts.get(loc.id) ?? { assigned: 1, arrived: 0 }),
     claimedBy: STUB_CLAIMS.get(loc.id) ?? null
   }))
 }

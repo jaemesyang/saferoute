@@ -17,8 +17,8 @@ const SEVERITY_COLOR = {
   low: '#4aa8ff',
 }
 
-function radiusFor(headcount, maxHeadcount) {
-  const share = maxHeadcount > 0 ? headcount / maxHeadcount : 0
+function radiusFor(total, maxTotal) {
+  const share = maxTotal > 0 ? total / maxTotal : 0
   return 7 + 15 * Math.sqrt(share)
 }
 
@@ -46,8 +46,8 @@ function FitToHotspots({ hotspots }) {
  * @param {(id: string) => void} props.onClaim
  */
 function HotspotMap({ hotspots, dispatcherName, onClaim }) {
-  const maxHeadcount = hotspots.reduce(
-    (max, spot) => Math.max(max, spot.headcount),
+  const maxTotal = hotspots.reduce(
+    (max, spot) => Math.max(max, spot.assigned + spot.arrived),
     0,
   )
 
@@ -68,9 +68,10 @@ function HotspotMap({ hotspots, dispatcherName, onClaim }) {
       <FitToHotspots hotspots={hotspots} />
 
       {hotspots.map((spot) => {
+        const total = spot.assigned + spot.arrived
         const color =
           SEVERITY_COLOR[
-          spot.headcount >= 40 ? 'high' : spot.headcount >= 20 ? 'med' : 'low'
+          spot.assigned >= 40 ? 'high' : spot.assigned >= 20 ? 'med' : 'low'
           ]
         const isMine = spot.claimedBy === dispatcherName
 
@@ -78,21 +79,23 @@ function HotspotMap({ hotspots, dispatcherName, onClaim }) {
           <CircleMarker
             key={spot.id}
             center={[spot.lat, spot.lng]}
-            radius={radiusFor(spot.headcount, maxHeadcount)}
+            radius={radiusFor(total, maxTotal)}
             pathOptions={{
               color,
               weight: 2,
               opacity: 0.9,
               fillColor: color,
-              fillOpacity: 0.15 + 0.4 * (spot.headcount / (maxHeadcount || 1)),
+              fillOpacity: 0.15 + 0.4 * (total / (maxTotal || 1)),
             }}
           >
             <Popup>
               <div className="map-popup">
                 <p className="map-popup-name">{spot.name}</p>
                 <p className="map-popup-count">
-                  <span className="label">Waiting</span>
-                  <strong>{spot.headcount}</strong>
+                  <span className="label">Assigned</span>
+                  <strong>{spot.assigned}</strong>
+                  <span className="label">Arrived</span>
+                  <strong>{spot.arrived}</strong>
                 </p>
                 {spot.claimedBy ? (
                   <span className={isMine ? 'pill is-ok' : 'pill is-dim'}>

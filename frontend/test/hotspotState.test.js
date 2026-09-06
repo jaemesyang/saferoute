@@ -4,8 +4,8 @@ import { mergeHotspots } from '../src/utils/hotspotState.js'
 import { getStubHotspots } from '../src/api/hotspots.js'
 
 const SERVER = [
-  { id: 'a', name: 'Baxter Arena', lat: 41.2336, lng: -95.9569, headcount: 12, claimedBy: null },
-  { id: 'b', name: 'Creighton University', lat: 41.2659, lng: -95.9451, headcount: 30, claimedBy: null },
+  { id: 'a', name: 'Baxter Arena', lat: 41.2336, lng: -95.9569, assigned: 12, arrived: 4, claimedBy: null },
+  { id: 'b', name: 'Creighton University', lat: 41.2659, lng: -95.9451, assigned: 30, arrived: 18, claimedBy: null },
 ]
 
 const NO_LOCAL = { claims: {}, resolvedIds: [] }
@@ -17,12 +17,12 @@ test('a refresh does not drop who claimed what', () => {
   assert.equal(merged.find(s => s.id === 'b').claimedBy, null)
 })
 
-test('a refresh still picks up live headcount for a claimed hotspot', () => {
+test('a refresh still picks up live assigned count for a claimed hotspot', () => {
   const local = { claims: { a: 'dispatcherb' }, resolvedIds: [] }
-  const later = SERVER.map(s => s.id === 'a' ? { ...s, headcount: 41 } : s)
+  const later = SERVER.map(s => s.id === 'a' ? { ...s, assigned: 41 } : s)
   const merged = mergeHotspots(later, local)
   const a = merged.find(s => s.id === 'a')
-  assert.equal(a.headcount, 41)
+  assert.equal(a.assigned, 41)
   assert.equal(a.claimedBy, 'dispatcherb')
 })
 
@@ -44,7 +44,7 @@ test('a local claim wins over whatever the server sent', () => {
 })
 
 test('hotspots the backend omits claimedBy for read as unclaimed', () => {
-  const server = [{ id: 'c', name: 'Kennedy High School', lat: 41.2958, lng: -96.0313, headcount: 5 }]
+  const server = [{ id: 'c', name: 'Kennedy High School', lat: 41.2958, lng: -96.0313, assigned: 5, arrived: 0 }]
   assert.equal(mergeHotspots(server, NO_LOCAL)[0].claimedBy, null)
 })
 

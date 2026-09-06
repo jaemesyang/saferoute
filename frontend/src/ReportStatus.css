@@ -42,13 +42,13 @@
   color: var(--text);
 }
 
-.status-headcount {
+.status-counts {
   margin: 0;
   color: var(--dim);
   font-size: 15px;
 }
 
-.status-headcount strong {
+.status-counts strong {
   color: var(--text);
   font-variant-numeric: tabular-nums;
 }

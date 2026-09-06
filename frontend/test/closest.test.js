@@ -61,7 +61,7 @@ test('submitReport posts to the reports endpoint and normalises its shape', asyn
 })
 
 test('assignment id matches an entry in the polled hotspot list', async () => {
-  // ReportStatus finds the headcount with `spot.id === assignment.id`, and
+  // ReportStatus finds the assignment counts with `spot.id === assignment.id`, and
   // treats a missing id as "this hotspot is resolved".
   const { getStubHotspots } = await import('../src/api/hotspots.js')
   const assignment = await getStubAssignment(NEAR_BAXTER)
