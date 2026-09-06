@@ -50,92 +50,47 @@ export async function fetchHotspots() {
   }
 }
 
-/**
- * @typedef {Object} ClaimResult
- * @property {'claimed' | 'conflict' | 'notFound' | 'offline'} status
- * @property {string} [claimedBy] who actually holds it — on a conflict, the other dispatcher
- * @property {string} [resolveToken] proof of ownership, needed to resolve the hotspot later
- */
-
-/**
- *
- * @param {string} id
- * @param {string} dispatcherName
- * @param {string} [apiUrl]
- * @returns {Promise<ClaimResult>}
- */
+/** @returns {Promise<{ claimedBy: string, resolveToken: string } | null>} */
 export async function claimHotspot(id, dispatcherName, apiUrl) {
   const baseUrl = apiUrl ?? import.meta.env?.VITE_API_URL;
 
   if (!baseUrl) {
-    return { status: 'offline' };
+    return null;
   }
 
   try {
-    const response = await fetch(`${baseUrl}/api/hotspots/${id}/claim`, {
+    const response = await fetch(`${baseUrl}/api/hotspots/claim`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ dispatcherName })
+      body: JSON.stringify({ id, dispatcherName })
     });
 
-    const body = await response.json().catch(() => ({}));
+    if (!response.ok) return null;
 
-    if (response.ok) {
-      return {
-        status: 'claimed',
-        claimedBy: body.claimedBy ?? dispatcherName,
-        resolveToken: body.resolveToken
-      };
-    }
-    if (response.status === 409) {
-      return { status: 'conflict', claimedBy: body.claimedBy };
-    }
-    if (response.status === 404) {
-      return { status: 'notFound' };
-    }
-    return { status: 'offline' };
+    return response.json();
   } catch {
-    return { status: 'offline' };
+    return null;
   }
 }
 
-/**
- * @typedef {Object} ResolveResult
- * @property {'resolved' | 'badToken' | 'notFound' | 'offline'} status
- */
-
-/**
- * @param {string} id
- * @param {string} token the resolveToken handed back by claimHotspot
- * @param {string} [apiUrl]
- * @returns {Promise<ResolveResult>}
- */
+/** @returns {Promise<boolean>} */
 export async function resolveHotspot(id, token, apiUrl) {
   const baseUrl = apiUrl ?? import.meta.env?.VITE_API_URL;
 
   if (!baseUrl || !token) {
-    return { status: 'offline' };
+    return false;
   }
 
   try {
-    const response = await fetch(`${baseUrl}/api/hotspots/${id}/resolve`, {
+    const response = await fetch(`${baseUrl}/api/hotspots/resolve`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token })
+      body: JSON.stringify({ id, token })
     });
 
-    if (response.ok) {
-      return { status: 'resolved' };
-    }
-    if (response.status === 403) {
-      return { status: 'badToken' };
-    }
-    if (response.status === 404) {
-      return { status: 'notFound' };
-    }
-    return { status: 'offline' };
+    return response.ok;
   } catch {
-    return { status: 'offline' };
+    return false;
   }
 }
 

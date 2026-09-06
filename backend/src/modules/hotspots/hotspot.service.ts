@@ -1,9 +1,9 @@
 import { randomUUID } from 'node:crypto';
-import { and, eq, isNull, or, sql } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { db } from "../../db/index.js";
 import { hotspots, rescueRequests } from "../../db/schema.js";
-import { ClaimResult, Hotspot, ResolveResult } from "./hotspot.types.js"
-import { CreateHotspotInput } from "./hotspot.schema.js";
+import { Hotspot } from "./hotspot.types.js"
+import { ClaimHotspotInput, CreateHotspotInput, ResolveHotspotInput } from "./hotspot.schema.js";
 
 export async function getHotspots() {
   const allHotspots = await db
@@ -47,70 +47,27 @@ export async function createHotspot(input: CreateHotspotInput) {
   return hotspot;
 }
 
-export async function claimHotspot(id: number, dispatcherName: string): Promise<ClaimResult> {
-  const newToken = randomUUID();
-
+export async function claimHotspot(input: ClaimHotspotInput) {
   const [claimed] = await db
     .update(hotspots)
     .set({
-      claimedBy: dispatcherName,
-      resolveToken: sql`coalesce(${hotspots.resolveToken}, ${newToken})`,
+      claimedBy: input.dispatcherName,
+      resolveToken: randomUUID(),
     })
-    .where(
-      and(
-        eq(hotspots.id, id),
-        or(isNull(hotspots.claimedBy), eq(hotspots.claimedBy, dispatcherName)),
-      ),
-    )
-    .returning({
-      claimedBy: hotspots.claimedBy,
-      resolveToken: hotspots.resolveToken,
-    });
+    .where(eq(hotspots.id, input.id))
+    .returning({ claimedBy: hotspots.claimedBy, resolveToken: hotspots.resolveToken });
 
-  if (claimed?.claimedBy && claimed.resolveToken) {
-    return {
-      status: 'claimed',
-      claimedBy: claimed.claimedBy,
-      resolveToken: claimed.resolveToken,
-    };
-  }
-
-  const [existing] = await db
-    .select({ claimedBy: hotspots.claimedBy })
-    .from(hotspots)
-    .where(eq(hotspots.id, id))
-    .limit(1);
-
-  if (!existing) {
-    return { status: 'notFound' };
-  }
-
-  return { status: 'conflict', claimedBy: existing.claimedBy ?? dispatcherName };
+  return claimed;
 }
 
-export async function resolveHotspot(id: number, token: string): Promise<ResolveResult> {
-  return db.transaction(async (tx) => {
-    const [hotspot] = await tx
-      .select({ resolveToken: hotspots.resolveToken })
-      .from(hotspots)
-      .where(eq(hotspots.id, id))
-      .limit(1);
+export async function resolveHotspot(input: ResolveHotspotInput) {
+  const deleted = await db
+    .delete(hotspots)
+    .where(and(eq(hotspots.id, input.id), eq(hotspots.resolveToken, input.token)))
+    .returning({ id: hotspots.id });
 
-    if (!hotspot) {
-      return { status: 'notFound' };
-    }
-
-    if (!hotspot.resolveToken || hotspot.resolveToken !== token) {
-      return { status: 'badToken' };
-    }
-
-    await tx
-      .update(rescueRequests)
-      .set({ assignedHotspotId: null })
-      .where(eq(rescueRequests.assignedHotspotId, id));
-
-    await tx.delete(hotspots).where(eq(hotspots.id, id));
-
-    return { status: 'resolved' };
-  });
+  if (deleted.length > 0) await db
+    .update(rescueRequests)
+    .set({ assignedHotspotId: null })
+    .where(eq(rescueRequests.assignedHotspotId, input.id));
 }

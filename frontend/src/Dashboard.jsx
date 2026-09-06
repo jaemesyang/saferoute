@@ -81,10 +81,8 @@ function Dashboard({ dispatcherName, onSignOut }) {
 
     const result = await claimHotspot(id, dispatcherName)
 
-    if (result.status === 'claimed') {
-      if (result.resolveToken) {
-        setTokens((prev) => ({ ...prev, [id]: result.resolveToken }))
-      }
+    if (result) {
+      setTokens((prev) => ({ ...prev, [id]: result.resolveToken }))
       await load()
       return
     }
@@ -95,13 +93,7 @@ function Dashboard({ dispatcherName, onSignOut }) {
       return next
     })
 
-    if (result.status === 'conflict') {
-      setNotice(`Already claimed by ${result.claimedBy ?? 'another dispatcher'}.`)
-    } else if (result.status === 'notFound') {
-      setNotice('That hotspot is no longer active.')
-    } else {
-      setNotice('Could not reach dispatch. Claim not saved — try again.')
-    }
+    setNotice('Could not reach dispatch. Claim not saved — try again.')
 
     await load()
   }
@@ -113,20 +105,9 @@ function Dashboard({ dispatcherName, onSignOut }) {
   async function handleResolve(id) {
     setNotice(null)
 
-    let token = tokens[id]
-    if (!token) {
-      const reclaim = await claimHotspot(id, dispatcherName)
-      if (reclaim.status !== 'claimed' || !reclaim.resolveToken) {
-        setNotice('Could not confirm you own this hotspot — refresh and try again.')
-        return
-      }
-      token = reclaim.resolveToken
-      setTokens((prev) => ({ ...prev, [id]: token }))
-    }
+    const result = await resolveHotspot(id, tokens[id])
 
-    const result = await resolveHotspot(id, token)
-
-    if (result.status !== 'resolved' && result.status !== 'notFound') {
+    if (!result) {
       setNotice('Could not reach dispatch. Hotspot not resolved — try again.')
       return
     }

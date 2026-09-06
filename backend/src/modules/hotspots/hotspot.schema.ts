@@ -7,14 +7,14 @@ export const createHotspotSchema = z.object({
 });
 
 export const claimHotspotSchema = z.object({
+  id: z.coerce.number().int().positive(),
   dispatcherName: z.string().trim().min(1).max(100),
 });
 
 export const resolveHotspotSchema = z.object({
+  id: z.coerce.number().int().positive(),
   token: z.string().trim().min(1),
 });
-
-export const hotspotIdSchema = z.coerce.number().int().positive();
 
 export type CreateHotspotInput = z.infer<typeof createHotspotSchema>;
 export type ClaimHotspotInput = z.infer<typeof claimHotspotSchema>;
