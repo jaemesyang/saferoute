@@ -133,9 +133,6 @@ function VictimReport({ onReported, onDispatcherAccess }: VictimReportProps) {
               </div>
             )}
 
-            <p className="report-note">
-              Your location is only used to find you a safe place to go.
-            </p>
           </>
         )}
 

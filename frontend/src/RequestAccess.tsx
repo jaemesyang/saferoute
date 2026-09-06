@@ -31,10 +31,6 @@ function RequestAccess({ onApprove }: RequestAccessProps) {
             <span className="access-mark-name">SAFEROUTE</span>
             <span className="access-mark-sub">Dispatch Console</span>
           </div>
-          <span className="pill is-dim">
-            <span className="dot" />
-            Restricted
-          </span>
         </header>
 
         <div className="access-body">
@@ -84,9 +80,6 @@ function RequestAccess({ onApprove }: RequestAccessProps) {
           </button>
         </div>
 
-        <footer className="access-foot label">
-          Demo build — credentials are not verified
-        </footer>
       </form>
     </main>
   )
