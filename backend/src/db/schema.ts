@@ -6,7 +6,8 @@ export const hotspots = pgTable(
     id: serial('id').primaryKey(),
     name: text('name').notNull(),
     location: geometry('location', {type: 'point', mode: 'xy', srid: 4326}).notNull(),
-    headcount: integer('headcount').notNull().default(0)
+    assigned: integer('assigned').notNull().default(0),
+    arrived: integer('arrived').notNull().default(0)
   },
   (t) => [
     index('spatial_index').using('gist', t.location),

@@ -46,7 +46,7 @@ export async function createReport(input: CreateReportInput): Promise<ReportAssi
   const report = await db.transaction(async (tx) => {
     await tx
       .update(hotspots)
-      .set({headcount: sql`${hotspots.headcount} + 1`})
+      .set({assigned: sql`${hotspots.assigned} + 1`})
       .where(eq(hotspots.id, closest.id));
 
     const [created] = await tx
