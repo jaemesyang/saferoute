@@ -37,10 +37,10 @@ test('a claim by another dispatcher survives when the server reports one', () =>
   assert.equal(merged.find(s => s.id === 'b').claimedBy, 'dispatchera')
 })
 
-test('a local claim wins over whatever the server sent', () => {
+test('the server wins over a local claim it turned down', () => {
   const server = SERVER.map(s => s.id === 'b' ? { ...s, claimedBy: 'dispatchera' } : s)
   const merged = mergeHotspots(server, { claims: { b: 'dispatcherb' }, resolvedIds: [] })
-  assert.equal(merged.find(s => s.id === 'b').claimedBy, 'dispatcherb')
+  assert.equal(merged.find(s => s.id === 'b').claimedBy, 'dispatchera')
 })
 
 test('hotspots the backend omits claimedBy for read as unclaimed', () => {
