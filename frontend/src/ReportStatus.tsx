@@ -55,7 +55,7 @@ function ReportStatus({ assignment, coords }: ReportStatusProps) {
 
     try {
       const result = await fetchHotspots()
-      const match = result.hotspots.find((spot) => spot.id === assignment.hotspotId)
+      const match = result.find((spot) => spot.id === assignment.hotspotId)
       if (match) {
         hasSeenAssignment.current = true
         setCounts({ assigned: match.assigned, arrived: match.arrived })
@@ -78,8 +78,9 @@ function ReportStatus({ assignment, coords }: ReportStatusProps) {
   async function handleCheckIn() {
     setCheckInError(false)
     setCheckInPhase('sending')
-    const result = await checkIn(assignment.id)
-    if (!result.confirmed) {
+    try {
+      await checkIn(assignment.id)
+    } catch {
       setCheckInError(true)
       setCheckInPhase('idle')
       return

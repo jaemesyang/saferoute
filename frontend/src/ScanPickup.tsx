@@ -31,50 +31,7 @@ function parsePickupCode(scanned: string): PickupTarget | null {
   return { id, token }
 }
 
-function confirmPickup(target: PickupTarget): Promise<boolean> {
-  return resolveHotspot(target.id, target.token)
-}
-
 type Phase = 'idle' | 'scanning' | 'review' | 'sending' | 'done' | 'error'
-
-interface Failure {
-  kind: 'permission' | 'camera' | 'resolve'
-  text: string
-}
-
-function describeCameraFailure(error: unknown): Failure {
-  if (!window.isSecureContext) {
-    return {
-      kind: 'camera',
-      text: 'This page is not on a secure connection, so the browser will not release the camera. Open the https:// address from the dev server instead of the http:// one.',
-    }
-  }
-
-  const name = error instanceof DOMException ? error.name : ''
-
-  if (name === 'NotAllowedError' || name === 'SecurityError') {
-    return {
-      kind: 'permission',
-      text: 'Camera access is blocked for this site. Tap the lock or camera icon in the address bar, allow the camera, then reload this page.',
-    }
-  }
-
-  if (name === 'NotFoundError' || name === 'OverconstrainedError') {
-    return { kind: 'camera', text: 'No camera was found on this device.' }
-  }
-
-  if (name === 'NotReadableError') {
-    return {
-      kind: 'camera',
-      text: 'The camera is already in use by another app. Close it and try again.',
-    }
-  }
-
-  return {
-    kind: 'camera',
-    text: 'The camera could not be started on this device.',
-  }
-}
 
 interface ScanPickupProps {
   hotspots: Hotspot[]
@@ -85,7 +42,7 @@ interface ScanPickupProps {
 function ScanPickup({ hotspots, onClose, onResolved }: ScanPickupProps) {
   const [phase, setPhase] = useState<Phase>('idle')
   const [target, setTarget] = useState<PickupTarget | null>(null)
-  const [failure, setFailure] = useState<Failure | null>(null)
+  const [failure, setFailure] = useState('')
   const [rejected, setRejected] = useState(false)
 
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -142,9 +99,9 @@ function ScanPickup({ hotspots, onClose, onResolved }: ScanPickupProps) {
         if (cancelled) return
         enterPhase('scanning')
       })
-      .catch((error: unknown) => {
+      .catch(() => {
         if (cancelled) return
-        setFailure(describeCameraFailure(error))
+        setFailure('Camera unavailable. Check camera permission and try again.')
         enterPhase('error')
       })
 
@@ -158,7 +115,7 @@ function ScanPickup({ hotspots, onClose, onResolved }: ScanPickupProps) {
 
   function resumeScanning(): void {
     setTarget(null)
-    setFailure(null)
+    setFailure('')
     setRejected(false)
     enterPhase('scanning')
     void scannerRef.current?.start()
@@ -169,13 +126,14 @@ function ScanPickup({ hotspots, onClose, onResolved }: ScanPickupProps) {
 
     enterPhase('sending')
 
-    const resolved = await confirmPickup(target)
-
-    if (!resolved) {
-      setFailure({
-        kind: 'resolve',
-        text: 'Nothing was cleared. The code may be out of date, this pickup may already be done, or the connection dropped. Try again, or ask the civilian to reload their status screen for a fresh code.',
-      })
+    try {
+      if (!await resolveHotspot(target.id, target.token)) {
+        setFailure('Pickup could not be cleared. Check the connection and try again.')
+        enterPhase('error')
+        return
+      }
+    } catch {
+      setFailure('Pickup could not be cleared. Check the connection and try again.')
       enterPhase('error')
       return
     }
@@ -273,11 +231,11 @@ function ScanPickup({ hotspots, onClose, onResolved }: ScanPickupProps) {
         <section className="scan-panel is-error" role="alert">
           <span className="pill is-warn">
             <span className="dot" />
-            {failure.kind === 'permission' ? 'Camera blocked' : 'Not cleared'}
+            Couldn't complete
           </span>
-          <p className="scan-panel-text">{failure.text}</p>
+          <p className="scan-panel-text">{failure}</p>
           <div className="scan-actions">
-            {failure.kind === 'resolve' ? (
+            {target ? (
               <>
                 <button
                   className="btn btn-primary"

@@ -1,4 +1,4 @@
-import { apiUrl } from './base'
+import { apiFetch } from './base'
 
 export interface Hotspot {
   id: number
@@ -10,65 +10,33 @@ export interface Hotspot {
   claimedBy: string | null
 }
 
-export interface HotspotsResult {
-  hotspots: Hotspot[]
-}
-
-export async function fetchHotspots(): Promise<HotspotsResult> {
-  const url = apiUrl('/api/hotspots');
-  if (!url) throw new Error('API is not configured')
-
-  const response = await fetch(url);
-  if (!response.ok) throw new Error(`Hotspots request failed (${response.status})`)
+export async function fetchHotspots(): Promise<Hotspot[]> {
+  const response = await apiFetch('/api/hotspots')
 
   const hotspots = await response.json()
-  if (!Array.isArray(hotspots)) throw new Error('Invalid hotspots response')
-  return { hotspots }
+  if (!Array.isArray(hotspots)) throw new Error('Invalid response')
+  return hotspots
 }
 
 export interface ClaimResult {
-  claimedBy: string
-  resolveToken: string
+  claimedBy: string | null
+  resolveToken: string | null
 }
 
-export async function claimHotspot(id: number, dispatcherName: string): Promise<ClaimResult | null> {
-  const url = apiUrl('/api/hotspots/claim');
-
-  if (!url) {
-    return null;
-  }
-
-  try {
-    const response = await fetch(url, {
+export async function claimHotspot(id: number, dispatcherName: string): Promise<ClaimResult> {
+  const response = await apiFetch('/api/hotspots/claim', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, dispatcherName })
-    });
-
-    if (!response.ok) return null;
-
-    return response.json();
-  } catch {
-    return null;
-  }
+    })
+  return response.json()
 }
 
 export async function resolveHotspot(id: number, token: string): Promise<boolean> {
-  const url = apiUrl('/api/hotspots/resolve');
-
-  if (!url || !token) {
-    return false;
-  }
-
-  try {
-    const response = await fetch(url, {
+  await apiFetch('/api/hotspots/resolve', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, token })
-    });
-
-    return response.ok;
-  } catch {
-    return false;
-  }
+    })
+  return true
 }

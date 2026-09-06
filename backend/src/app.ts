@@ -1,4 +1,5 @@
 import express from 'express';
+import type { NextFunction, Request, Response } from 'express';
 import { hotspotRouter } from './modules/hotspots/hotspot.routes.js';
 import {rescueRequestRouter} from './modules/rescueRequests/rescueRequest.routes.js';
 
@@ -15,3 +16,8 @@ app.use((req, res, next) => {
 
 app.use('/api/hotspots', hotspotRouter);
 app.use('/api/reports', rescueRequestRouter)
+
+app.use((error: unknown, _req: Request, res: Response, _next: NextFunction) => {
+  console.error(error)
+  res.status(500).json({ error: 'Request failed' })
+})

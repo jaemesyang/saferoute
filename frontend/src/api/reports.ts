@@ -1,4 +1,4 @@
-import { apiUrl } from './base'
+import { apiFetch } from './base'
 
 export interface Assignment {
   id: number
@@ -14,19 +14,14 @@ export interface ReportResult {
 }
 
 export async function submitReport(lat: number, lng: number): Promise<ReportResult> {
-  const url = apiUrl('/api/reports');
-  if (!url) throw new Error('API is not configured')
-
-  const response = await fetch(url, {
+  const response = await apiFetch('/api/reports', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ lat, lng })
   })
-  if (!response.ok) throw new Error(`Report request failed (${response.status})`)
-
   const closest = await response.json()
   if (!closest || !Number.isFinite(closest.lat) || !Number.isFinite(closest.lng)) {
-    throw new Error('Invalid report response')
+    throw new Error('Invalid response')
   }
 
   return {
@@ -41,21 +36,10 @@ export async function submitReport(lat: number, lng: number): Promise<ReportResu
   }
 }
 
-export interface CheckInResult {
-  confirmed: boolean
-}
-
-export async function checkIn(assignmentId: number): Promise<CheckInResult> {
-  const url = apiUrl('/api/reports/arrived');
-  if (!url) return {confirmed: false};
-  try {
-    const response = await fetch(url, {
+export async function checkIn(assignmentId: number): Promise<void> {
+  await apiFetch('/api/reports/arrived', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({id: assignmentId})
-    });
-    return {confirmed: response.ok}
-  } catch {
-    return {confirmed: false};
-  }
+    })
 }

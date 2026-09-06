@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { claimHotspot, fetchHotspots, resolveHotspot, type Hotspot } from './api/hotspots'
 import { usePolling } from './hooks/usePolling'
 import { mergeHotspots } from './utils/hotspotState'
@@ -39,7 +39,7 @@ function Dashboard({ dispatcherName, onSignOut }: DashboardProps) {
     setIsFetching(true)
     try {
       const result = await fetchHotspots()
-      setServerHotspots(result.hotspots)
+      setServerHotspots(result)
       setLastSync(new Date())
       setHasLoaded(true)
     } catch {
@@ -52,47 +52,35 @@ function Dashboard({ dispatcherName, onSignOut }: DashboardProps) {
 
   usePolling(load, REFRESH_INTERVAL_MS)
 
-  const hotspots = useMemo(
-    () => mergeHotspots(serverHotspots, { claims, resolvedIds }),
-    [serverHotspots, claims, resolvedIds],
-  )
-
-  const sorted = useMemo(
-    () => [...hotspots].sort((a, b) => b.assigned - a.assigned),
-    [hotspots],
-  )
-
-  const stats = useMemo(
-    () => ({
-      locations: hotspots.length,
-      assigned: hotspots.reduce((total, spot) => total + spot.assigned, 0),
-      arrived: hotspots.reduce((total, spot) => total + spot.arrived, 0),
-      unclaimed: hotspots.filter((spot) => !spot.claimedBy).length,
-    }),
-    [hotspots],
-  )
+  const hotspots = mergeHotspots(serverHotspots, { claims, resolvedIds })
+  const sorted = [...hotspots].sort((a, b) => b.assigned - a.assigned)
+  const stats = {
+    locations: hotspots.length,
+    assigned: hotspots.reduce((total, spot) => total + spot.assigned, 0),
+    arrived: hotspots.reduce((total, spot) => total + spot.arrived, 0),
+    unclaimed: hotspots.filter((spot) => !spot.claimedBy).length,
+  }
 
   async function handleClaim(id: number): Promise<void> {
     setClaims((prev) => ({ ...prev, [id]: dispatcherName }))
     setNotice(null)
 
-    const result = await claimHotspot(id, dispatcherName)
-
-    if (result) {
-      setTokens((prev) => ({ ...prev, [id]: result.resolveToken }))
+    try {
+      const result = await claimHotspot(id, dispatcherName)
+      const token = result?.resolveToken
+      if (!token) throw new Error('Claim did not return a resolve token')
+      setTokens((prev) => ({ ...prev, [id]: token }))
       await load()
       return
+    } catch {
+      setClaims((prev) => {
+        const next = { ...prev }
+        delete next[id]
+        return next
+      })
+      setNotice('Could not reach dispatch. Claim not saved — try again.')
+      await load()
     }
-
-    setClaims((prev) => {
-      const next = { ...prev }
-      delete next[id]
-      return next
-    })
-
-    setNotice('Could not reach dispatch. Claim not saved — try again.')
-
-    await load()
   }
 
   async function handleResolve(id: number): Promise<void> {
@@ -106,9 +94,9 @@ function Dashboard({ dispatcherName, onSignOut }: DashboardProps) {
       return
     }
 
-    const resolved = await resolveHotspot(id, token)
-
-    if (!resolved) {
+    try {
+      await resolveHotspot(id, token)
+    } catch {
       setNotice('Could not reach dispatch. Hotspot not resolved — try again.')
       return
     }
