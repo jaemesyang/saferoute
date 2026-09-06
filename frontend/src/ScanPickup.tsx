@@ -30,6 +30,7 @@ function ScanPickup({ onClose, onResolved }: ScanPickupProps) {
   const [pickupStats, setPickupStats] = useState<PickupStats | null>(null)
 
   const videoRef = useRef<HTMLVideoElement>(null)
+  const frozenFrameRef = useRef<HTMLCanvasElement>(null)
   const scannerRef = useRef<QrScanner | null>(null)
   const phaseRef = useRef<Phase>('idle')
   const cameraWantedRef = useRef(true)
@@ -53,11 +54,15 @@ function ScanPickup({ onClose, onResolved }: ScanPickupProps) {
       }
 
       setRejected(false)
-      cameraWantedRef.current = false
+      const video = videoRef.current
+      const frozenFrame = frozenFrameRef.current
+      if (video && frozenFrame) {
+        frozenFrame.width = video.videoWidth
+        frozenFrame.height = video.videoHeight
+        frozenFrame.getContext('2d')?.drawImage(video, 0, 0)
+      }
       setTarget(parsed)
       enterPhase('review')
-
-      void scannerRef.current?.pause()
     },
     [enterPhase],
   )
@@ -123,8 +128,7 @@ function ScanPickup({ onClose, onResolved }: ScanPickupProps) {
     setPickupStats(null)
     setFailure('')
     setRejected(false)
-    enterPhase('idle')
-    ensureCameraRef.current()
+    enterPhase('scanning')
   }
 
   async function handleConfirm(): Promise<void> {
@@ -164,6 +168,11 @@ function ScanPickup({ onClose, onResolved }: ScanPickupProps) {
 
       <div className="scan-stage">
         <video className="scan-video" ref={videoRef} muted playsInline />
+        <canvas
+          className="scan-frozen-frame"
+          ref={frozenFrameRef}
+          hidden={!target}
+        />
 
         {phase === 'idle' && (
           <p className="scan-overlay-note">Starting camera…</p>
