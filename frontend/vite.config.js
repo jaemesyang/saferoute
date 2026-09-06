@@ -10,7 +10,7 @@ export default defineConfig({
   // never surfaces the problem; a phone hitting the LAN URL over plain http
   // gets its camera request rejected. Phones will warn about the self-signed
   // cert once and need "proceed anyway" before the camera comes up.
-  plugins: [basicSsl(), react()],
+  plugins: [react()],
   server: {
     host: true,
     allowedHosts: ['deferred-prone-segment.ngrok-free.dev', '.trycloudflare.com'],

@@ -1,7 +1,7 @@
 import {db} from "../../db/index.js";
 import {hotspots, rescueRequests} from "../../db/schema.js";
-import {ArrivedInput, CreateReportInput} from "./rescueRequest.schema.js";
-import {sql, eq, and, isNotNull} from 'drizzle-orm';
+import {ArrivedInput, CreateReportInput, PickupInput} from "./rescueRequest.schema.js";
+import {sql, eq, and, isNotNull, ne} from 'drizzle-orm';
 import {ClosestHotspot, ReportAssignment} from './rescueRequest.types.js';
 
 async function getClosest(input: CreateReportInput): Promise<ClosestHotspot | null> {
@@ -52,7 +52,7 @@ export async function createReport(input: CreateReportInput): Promise<ReportAssi
         assignedHotspotId: closest.id,
         status: 'assigned',
       })
-      .returning({id: rescueRequests.id});
+      .returning({id: rescueRequests.id, qrToken: rescueRequests.qrToken});
 
     return created;
   });
@@ -64,6 +64,7 @@ export async function createReport(input: CreateReportInput): Promise<ReportAssi
     lat: closest.lat,
     lng: closest.lng,
     distanceMeters: closest.distanceMeters,
+    qrToken: report.qrToken
   };
 }
 
@@ -101,5 +102,23 @@ export async function arrived(input: ArrivedInput) {
         arrived: sql`${hotspots.arrived} + 1`
       })
       .where(eq(hotspots.id, request.assignedHotspotId))
+  })
+}
+
+export async function pickup(input: PickupInput) {
+  await db.transaction(async (tx) => {
+    await tx
+      .update(rescueRequests)
+      .set({
+        status: 'pickedup'
+      })
+      .where(
+        and(
+          eq(rescueRequests.qrToken, input.token),
+          ne(rescueRequests.status, 'pickedup')
+        )
+      )
+      .returning()
+
   })
 }

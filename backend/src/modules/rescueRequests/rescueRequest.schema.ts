@@ -9,5 +9,10 @@ export const arrivedSchema = z.object({
   id: z.coerce.number().gte(0)
 });
 
+export const pickupSchema = z.object({
+  token: z.uuid()
+})
+
 export type CreateReportInput = z.infer<typeof createReportSchema>;
 export type ArrivedInput = z.infer<typeof arrivedSchema>;
+export type PickupInput = z.infer<typeof pickupSchema>;

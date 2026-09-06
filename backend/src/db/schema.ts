@@ -1,4 +1,4 @@
-import {geometry, index, pgTable, serial, text, integer} from 'drizzle-orm/pg-core';
+import {geometry, index, pgTable, serial, text, integer, uuid} from 'drizzle-orm/pg-core';
 
 export const hotspots = pgTable(
   'hotspots',
@@ -23,5 +23,6 @@ export const rescueRequests = pgTable(
     assignedHotspotId: integer('assigned_hotspot_id').references(() => hotspots.id),
     people: integer('people').notNull().default(1),
     status: text('status').notNull(),
+    qrToken: uuid('qr_token').notNull().unique().defaultRandom()
   }
 )

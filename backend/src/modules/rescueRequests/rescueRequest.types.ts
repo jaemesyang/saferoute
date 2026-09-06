@@ -13,4 +13,5 @@ export type ReportAssignment = {
   lat: number
   lng: number
   distanceMeters: number
+  qrToken: string
 }

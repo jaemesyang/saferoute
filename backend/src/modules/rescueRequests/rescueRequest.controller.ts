@@ -10,3 +10,8 @@ export async function arrived(req: Request, res: Response) {
   await rescueRequestService.arrived(req.body);
   res.status(204).end()
 }
+
+export async function pickup(req: Request, res: Response) {
+  await rescueRequestService.pickup(req.body);
+  res.status(204).end();
+}
