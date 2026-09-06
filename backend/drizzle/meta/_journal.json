@@ -29,6 +29,13 @@
       "when": 1788652694422,
       "tag": "0003_parched_thanos",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1788657000000,
+      "tag": "0004_set-hotspots-srid",
+      "breakpoints": true
     }
   ]
 }
