@@ -1,0 +1,152 @@
+/* Full-viewport scanner: a camera feed on a phone, held one-handed, outdoors.
+   Follows ResolveHotspot's panel conventions so the confirm step reads the same
+   on both sides of the handoff. */
+
+.scan {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  min-height: 0;
+  border-inline: 1px solid var(--line);
+}
+
+.scan-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--line-bright);
+  background: var(--panel);
+  flex: none;
+}
+
+.scan-id {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.scan-mark {
+  font: 600 13px/1 var(--mono);
+  letter-spacing: 0.22em;
+  color: var(--dim);
+}
+
+/* The feed takes whatever height is left over. */
+.scan-stage {
+  position: relative;
+  flex: 1;
+  min-height: 320px;
+  background: #000;
+  overflow: hidden;
+}
+
+/* Absolutely positioned rather than a plain block with height: 100%. #root is
+   sized with min-height, not height, so a percentage height on the video has no
+   definite ancestor to resolve against and collapses to the frame's intrinsic
+   size — leaving the feed floating in dead black space. Against the stage's
+   positioned box the height is definite, and it also keeps the feed independent
+   of the overlay element QrScanner injects as a sibling. */
+.scan-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Sits over the feed rather than below it: the viewfinder is the thing being
+   looked at, and a line of text under it would go unread. */
+.scan-overlay-note {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  margin: 0;
+  padding: 12px 18px;
+  background: rgba(10, 12, 15, 0.82);
+  color: var(--text);
+  font: 500 12px/1.4 var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.scan-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 20px 18px;
+  border-top: 1px solid var(--line-bright);
+  background: var(--panel);
+  flex: none;
+}
+
+.scan-panel.is-done {
+  border-left: 2px solid var(--ok);
+}
+
+.scan-panel.is-error {
+  border-left: 2px solid var(--warn);
+}
+
+.scan-panel-text {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.4;
+  color: var(--text);
+}
+
+/* The one thing that has to be read before the tap. */
+.scan-place {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.25;
+  color: var(--text);
+}
+
+.scan-hint {
+  margin: 0;
+  max-width: 46ch;
+  color: var(--dim);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.scan-ref {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  color: var(--dimmer);
+}
+
+.scan-ref code {
+  font: 400 12px/1.4 var(--mono);
+  color: var(--dim);
+  overflow-wrap: anywhere;
+}
+
+.scan-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  width: 100%;
+  margin-top: 4px;
+}
+
+/* Big target: tapped one-handed, outdoors, in a hurry. Matches
+   .resolve-confirm on the civilian side. */
+.scan-confirm {
+  flex: 1;
+  min-width: 200px;
+  min-height: 64px;
+  padding: 18px 20px;
+  font-size: 16px;
+  letter-spacing: 0.1em;
+}

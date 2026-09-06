@@ -14,9 +14,9 @@ const FALLBACK_CENTER: LatLngTuple = [41.2565, -95.9345]
 const FALLBACK_ZOOM = 12
 
 const SEVERITY_COLOR = {
-  high: '#f0603c',
-  med: '#f0a92e',
-  low: '#4aa8ff',
+  high: '#b00d0dff',
+  med: '#f7ff09ff',
+  low: '#aeafb6ff',
 }
 
 function radiusFor(total: number, maxTotal: number) {

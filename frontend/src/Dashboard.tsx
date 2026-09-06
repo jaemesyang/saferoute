@@ -3,6 +3,7 @@ import { claimHotspot, fetchHotspots, resolveHotspot, type Hotspot } from './api
 import { usePolling } from './hooks/usePolling'
 import { mergeHotspots } from './utils/hotspotState'
 import HotspotMap from './HotspotMap'
+import ScanPickup from './ScanPickup'
 import './Dashboard.css'
 
 const REFRESH_INTERVAL_MS = 15000
@@ -33,6 +34,7 @@ function Dashboard({ dispatcherName, onSignOut }: DashboardProps) {
   const [view, setView] = useState<'list' | 'map'>('list')
   const [tokens, setTokens] = useState<Record<number, string>>({})
   const [notice, setNotice] = useState<string | null>(null)
+  const [isScanning, setIsScanning] = useState(false)
 
   const load = useCallback(async () => {
     setIsFetching(true)
@@ -95,7 +97,15 @@ function Dashboard({ dispatcherName, onSignOut }: DashboardProps) {
   async function handleResolve(id: number): Promise<void> {
     setNotice(null)
 
-    const resolved = await resolveHotspot(id, tokens[id])
+    const token = tokens[id]
+    if (!token) {
+      setNotice(
+        'This tab lost the code for that pickup (a reload clears it). Claim it again to mint a new one — any code already shown will stop working.',
+      )
+      return
+    }
+
+    const resolved = await resolveHotspot(id, token)
 
     if (!resolved) {
       setNotice('Could not reach dispatch. Hotspot not resolved — try again.')
@@ -104,6 +114,22 @@ function Dashboard({ dispatcherName, onSignOut }: DashboardProps) {
 
     setResolvedIds((prev) => (prev.includes(id) ? prev : [...prev, id]))
     await load()
+  }
+
+  async function handleScanResolved(id: number): Promise<void> {
+    setIsScanning(false)
+    setResolvedIds((prev) => (prev.includes(id) ? prev : [...prev, id]))
+    await load()
+  }
+
+  if (isScanning) {
+    return (
+      <ScanPickup
+        hotspots={hotspots}
+        onClose={() => setIsScanning(false)}
+        onResolved={handleScanResolved}
+      />
+    )
   }
 
   return (
@@ -139,6 +165,13 @@ function Dashboard({ dispatcherName, onSignOut }: DashboardProps) {
               Map
             </button>
           </span>
+          <button
+            className="btn"
+            type="button"
+            onClick={() => setIsScanning(true)}
+          >
+            Scan pickup
+          </button>
           <button
             className="btn"
             type="button"
@@ -220,42 +253,42 @@ function Dashboard({ dispatcherName, onSignOut }: DashboardProps) {
 
           {sorted.map((spot) => (
             <div className="row" key={spot.id}>
-                <span className={`col-sev sev-${severityOf(spot.assigned)}`} />
-                <span className="col-name">{spot.name}</span>
-                <span className="col-assigned">{spot.assigned}</span>
-                <span className="col-arrived">{spot.arrived}</span>
-                <span className="col-action">
-                  {spot.claimedBy ? (
-                    <>
-                      <span
-                        className={
-                          spot.claimedBy === dispatcherName
-                            ? 'pill is-ok'
-                            : 'pill is-dim'
-                        }
-                      >
-                        Claimed by {spot.claimedBy}
-                      </span>
-                      {spot.claimedBy === dispatcherName && (
-                        <button
-                          className="btn"
-                          type="button"
-                          onClick={() => handleResolve(spot.id)}
-                        >
-                          Resolve
-                        </button>
-                      )}
-                    </>
-                  ) : (
-                    <button
-                      className="btn btn-primary"
-                      type="button"
-                      onClick={() => handleClaim(spot.id)}
+              <span className={`col-sev sev-${severityOf(spot.assigned)}`} />
+              <span className="col-name">{spot.name}</span>
+              <span className="col-assigned">{spot.assigned}</span>
+              <span className="col-arrived">{spot.arrived}</span>
+              <span className="col-action">
+                {spot.claimedBy ? (
+                  <>
+                    <span
+                      className={
+                        spot.claimedBy === dispatcherName
+                          ? 'pill is-ok'
+                          : 'pill is-dim'
+                      }
                     >
-                      Claim
-                    </button>
-                  )}
-                </span>
+                      Claimed by {spot.claimedBy}
+                    </span>
+                    {spot.claimedBy === dispatcherName && (
+                      <button
+                        className="btn"
+                        type="button"
+                        onClick={() => handleResolve(spot.id)}
+                      >
+                        Resolve
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  <button
+                    className="btn btn-primary"
+                    type="button"
+                    onClick={() => handleClaim(spot.id)}
+                  >
+                    Claim
+                  </button>
+                )}
+              </span>
             </div>
           ))}
         </main>
