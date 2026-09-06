@@ -114,6 +114,7 @@ function ReportStatus({ assignment, coords }: ReportStatusProps) {
 
         <section className="status-place">
           <h1 className="status-name">{assignment.name}</h1>
+          <p className="status-address">{assignment.address}</p>
           {counts !== null && (
             <p className="status-counts">
               <strong>{counts.assigned}</strong> assigned · <strong>{counts.arrived}</strong> arrived

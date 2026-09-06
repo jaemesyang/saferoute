@@ -10,6 +10,7 @@ export async function getHotspots() {
     .select({
       id: hotspots.id,
       name: hotspots.name,
+      address: hotspots.address,
       location: hotspots.location,
       assigned: hotspots.assigned,
       arrived: hotspots.arrived,
@@ -20,6 +21,7 @@ export async function getHotspots() {
     return {
       id: hotspot.id,
       name: hotspot.name,
+      address: hotspot.address,
       lat: hotspot.location.y,
       lng: hotspot.location.x,
       assigned: hotspot.assigned,
@@ -31,12 +33,13 @@ export async function getHotspots() {
 }
 
 export async function createHotspot(input: CreateHotspotInput) {
-  const { name, lat, lng } = input;
+  const { name, address, lat, lng } = input;
 
   const [hotspot] = await db
     .insert(hotspots)
     .values({
       name: name,
+      address,
       location: {
         x: lng,
         y: lat,

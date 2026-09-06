@@ -1,6 +1,7 @@
 export type ClosestHotspot = {
   id: number
   name: string,
+  address: string,
   lat: number,
   lng: number
   distanceMeters: number
@@ -10,6 +11,7 @@ export type ReportAssignment = {
   id: number
   hotspotId: number
   name: string
+  address: string
   lat: number
   lng: number
   distanceMeters: number

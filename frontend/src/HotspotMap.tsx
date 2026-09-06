@@ -92,6 +92,7 @@ function HotspotMap({ hotspots, dispatcherName, onClaim }: HotspotMapProps) {
             <Popup>
               <div className="map-popup">
                 <p className="map-popup-name">{spot.name}</p>
+                <p className="map-popup-address">{spot.address}</p>
                 <p className="map-popup-count">
                   <span className="label">Assigned</span>
                   <strong>{spot.assigned}</strong>

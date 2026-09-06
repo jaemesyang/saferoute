@@ -11,6 +11,7 @@ async function getClosest(input: CreateReportInput): Promise<ClosestHotspot | nu
     .select({
       id: hotspots.id,
       name: hotspots.name,
+      address: hotspots.address,
       location: hotspots.location,
       distanceMeters: sql<number>`ST_Distance(${hotspots.location}::geography, ${sqlPoint}::geography )`,
     })
@@ -25,6 +26,7 @@ async function getClosest(input: CreateReportInput): Promise<ClosestHotspot | nu
   return {
     id: closest.id,
     name: closest.name,
+    address: closest.address,
     lat: closest.location.y,
     lng: closest.location.x,
     distanceMeters: closest.distanceMeters,
@@ -61,6 +63,7 @@ export async function createReport(input: CreateReportInput): Promise<ReportAssi
     id: report.id,
     hotspotId: closest.id,
     name: closest.name,
+    address: closest.address,
     lat: closest.lat,
     lng: closest.lng,
     distanceMeters: closest.distanceMeters,

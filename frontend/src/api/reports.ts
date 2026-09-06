@@ -4,6 +4,7 @@ export interface Assignment {
   id: number
   hotspotId: number
   name: string
+  address: string
   lat: number
   lng: number
   distanceToUser: number
@@ -25,6 +26,7 @@ export async function submitReport(lat: number, lng: number): Promise<Assignment
     id: Number(closest.id),
     hotspotId: Number(closest.hotspotId),
     name: closest.name,
+    address: closest.address,
     lat: closest.lat,
     lng: closest.lng,
     distanceToUser: Number(closest.distanceMeters),

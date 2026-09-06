@@ -145,10 +145,23 @@
 }
 
 .col-name {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
   font-size: 14px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.col-name strong {
+  font-weight: 500;
+}
+
+.col-name small,
+.map-popup-address {
+  color: var(--dim);
+  font-size: 12px;
 }
 
 .row-head .col-name {

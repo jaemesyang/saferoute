@@ -3,6 +3,7 @@ import { apiFetch } from './base'
 export interface Hotspot {
   id: number
   name: string
+  address: string
   lat: number
   lng: number
   assigned: number

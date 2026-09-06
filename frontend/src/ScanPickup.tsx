@@ -81,7 +81,7 @@ function ScanPickup({ onClose, onResolved }: ScanPickupProps) {
     scannerRef.current = scanner
 
     async function ensureCameraStream(): Promise<void> {
-      const stream = video.srcObject
+      const stream = videoRef.current?.srcObject
       const hasLiveStream =
         stream instanceof MediaStream &&
         stream.getVideoTracks().some((track) => track.readyState === 'live')

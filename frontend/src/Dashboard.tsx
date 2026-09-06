@@ -230,7 +230,10 @@ function Dashboard({ dispatcherName, onSignOut }: DashboardProps) {
           {sorted.map((spot) => (
             <div className="row" key={spot.id}>
               <span className={`col-sev sev-${severityOf(spot.assigned)}`} />
-              <span className="col-name">{spot.name}</span>
+              <span className="col-name">
+                <strong>{spot.name}</strong>
+                <small>{spot.address}</small>
+              </span>
               <span className="col-assigned">{spot.assigned}</span>
               <span className="col-arrived">{spot.arrived}</span>
               <span className="col-action">
